@@ -1,0 +1,9 @@
+{
+  "name": "Meu Treino",
+  "short_name": "Treino",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f4f6",
+  "theme_color": "#111111",
+  "lang": "pt-BR"
+}

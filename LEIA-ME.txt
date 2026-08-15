@@ -1,0 +1,10 @@
+MEU TREINO — APP OFFLINE
+
+Este pacote é uma PWA (Progressive Web App).
+Para o modo "app offline" do iPhone funcionar, é necessário abrir a página
+uma primeira vez por HTTPS e adicioná-la à Tela de Início. Depois disso,
+o service worker mantém a interface disponível offline e as cargas ficam
+salvas no próprio aparelho.
+
+Abrir diretamente pelo app Arquivos (file://) não permite instalar o PWA
+nem garante o armazenamento persistente.
