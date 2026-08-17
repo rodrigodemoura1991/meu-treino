@@ -55,18 +55,12 @@ function tabs(){
  document.getElementById("tabs").innerHTML=h;
 }
 function go(x){current=x;render()}
-function setsFor(row,n){
- let out="";for(let s=0;s<n;s++)out+=`<div class="grid"><input type="number" step="0.5" placeholder="kg" value="${esc(row?.["kg"+s]??"")}" onchange="put(this,${s},'kg')"><input type="number" placeholder="reps" value="${esc(row?.["reps"+s]??"")}" onchange="put(this,${s},'reps')"></div>`;
- return out;
-}
-let activeKey="",activeIndex=0;
-function put(el,s,field){let l=ensure(activeKey,current,today());l.rows[activeIndex]??={};l.rows[activeIndex][field+s]=el.value;save();renderSuggestion(activeKey,activeIndex)}
-function setRir(el){let l=ensure(activeKey,current,today());l.rows[activeIndex]??={};l.rows[activeIndex].rir=el.value;save()}
+function setsFor(row,n,i,k){let out="";for(let s=0;s<n;s++)out+=`<div class="grid"><input type="number" step="0.5" placeholder="kg" value="${esc(row?.["kg"+s]??"")}" onchange="put('${k}',${i},${s},'kg',this.value)"><input type="number" placeholder="reps" value="${esc(row?.["reps"+s]??"")}" onchange="put('${k}',${i},${s},'reps',this.value)"></div>`;return out}
+function put(k,i,s,f,v){let l=ensure(k,current,today());l.rows[i]??={};l.rows[i][f+s]=v;save();renderSuggestion(k,i)}
+function setObservation(k,i,v){let l=ensure(k,current,today());l.rows[i]??={};l.rows[i].observation=v;save()}
 function renderWorkout(){
  let ex=current=="Sábado"?sat:workouts[current].ex,d=today(),k=key(current,d),l=ensure(k,current,d);
- let rows=ex.map((e,i)=>{let r=l.rows[i]||{};activeKey=k;activeIndex=i;
-   return `<tr><td><b>${i+1}. ${esc(e[0])}</b><div class="muted">Meta ${e[2]} • ${e[1]} séries</div></td><td>${setsFor(r,e[1])}</td><td><input placeholder="RIR" value="${esc(r.rir??"")}" onchange="setRir(this)"><div id="sug${i}" class="muted" style="margin-top:5px"></div></td></tr>`
- }).join("");
+ let rows=ex.map((e,i)=>{let r=l.rows[i]||{};return `<tr><td><b>${i+1}. ${esc(e[0])}</b><div class="muted">Meta ${e[2]} • ${e[1]} séries</div></td><td>${setsFor(r,e[1],i,k)}</td><td><textarea rows="2" placeholder="Observação deste exercício" onchange="setObservation('${k}',${i},this.value)">${esc(r.observation??"")}</textarea><div id="sug${i}" class="muted" style="margin-top:5px"></div></td></tr>`}).join("");
  document.getElementById("app").innerHTML=`<div class="card"><h2>${workouts[current]?.icon||"🟣"} ${current} — ${workouts[current]?.title||"Treino opcional"}</h2><div class="muted">${dateBR(d)} • Os dados são salvos a cada alteração.</div></div>
  <div class="card scroll"><table><thead><tr><th>Exercício</th><th>Séries — kg / reps</th><th>RIR</th></tr></thead><tbody>${rows}</tbody></table>
  <h3>Observações</h3><textarea rows="3" onchange="ensure('${k}','${current}','${d}').notes=this.value;save()" placeholder="Energia, dor, técnica, falha…">${esc(l.notes||"")}</textarea>
@@ -95,11 +89,7 @@ function renderSuggestion(k,i){
 function clearDay(){if(confirm("Apagar o treino de hoje?")){delete data.logs[key(current,today())];save();render()}}
 function weekStart(){let d=new Date(),n=d.getDay(),diff=n===0?-6:1-n;d.setDate(d.getDate()+diff);return d.toISOString().slice(0,10)}
 function datesOfWeek(){let s=new Date(weekStart()+"T12:00:00");return Array.from({length:7},(_,i)=>{let d=new Date(s);d.setDate(s.getDate()+i);return d.toISOString().slice(0,10)})}
-function metrics(logs){
- let sessions=logs.length,sets=0,reps=0,volume=0;
- logs.forEach(l=>Object.values(l.rows||{}).forEach(r=>{let n=0;for(let k in r)if(k.startsWith("reps")&&r[k]!=""){let q=Number(r[k])||0;reps+=q;n++;let kg=Number(r[k.replace("reps","kg")])||0;volume+=kg*q}if(n)sets++}));
- return {sessions,sets,reps,volume};
-}
+function metrics(logs){let sessions=logs.length,sets=0,reps=0,volume=0;logs.forEach(l=>Object.values(l.rows||{}).forEach(r=>{for(let k in r)if(k.startsWith("reps")&&r[k]!=""){let q=Number(r[k])||0;reps+=q;sets++;volume+=(Number(r[k.replace("reps","kg")])||0)*q}}));return {sessions,sets,reps,volume};}
 function report(){
  let ds=datesOfWeek(),logs=Object.values(data.logs).filter(l=>ds.includes(l.date)),m=metrics(logs);
  let rows=ds.map(d=>{let ls=logs.filter(l=>l.date===d),x=metrics(ls);return `<tr><td>${dateBR(d)}</td><td>${ls.map(l=>l.day).join(", ")||"—"}</td><td>${x.sets}</td><td>${x.reps}</td><td>${Math.round(x.volume).toLocaleString("pt-BR")} kg</td></tr>`}).join("");
