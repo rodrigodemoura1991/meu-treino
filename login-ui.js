@@ -1,4 +1,4 @@
-// Correção definitiva da tela de login no iPhone/Safari/Chrome.
+// Interface de login — FIX6
 (function(){
   const CSS=`
     .auth{position:relative!important;z-index:1000!important;pointer-events:auto!important;touch-action:auto!important}
@@ -10,8 +10,7 @@
 
   function patch(){
     const box=document.querySelector('.auth');
-    if(!box)return;
-    if(box.dataset.loginPatched==='1')return;
+    if(!box || box.dataset.loginPatched==='1')return;
     box.dataset.loginPatched='1';
     box.innerHTML=`
       <div style="font-size:42px">🏋️</div>
@@ -28,8 +27,14 @@
     const pass=box.querySelector('#password');
     email.addEventListener('keydown',e=>{if(e.key==='Enter')pass.focus()});
     pass.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginButton').click()});
-    box.querySelector('#loginButton').addEventListener('click',()=>{if(typeof signIn==='function')signIn()});
-    box.querySelector('#signupButton').addEventListener('click',()=>{if(typeof signUp==='function')signUp()});
+    box.querySelector('#loginButton').addEventListener('click',()=>{
+      if(typeof window.signIn==='function') window.signIn();
+      else alert('Função de login ainda não carregou. Recarregue a página.');
+    });
+    box.querySelector('#signupButton').addEventListener('click',()=>{
+      if(typeof window.signUp==='function') window.signUp();
+      else alert('Função de cadastro ainda não carregou. Recarregue a página.');
+    });
     setTimeout(()=>email.focus(),100);
   }
 
