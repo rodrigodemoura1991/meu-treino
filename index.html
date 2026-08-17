@@ -13,199 +13,53 @@ main{max-width:1200px;margin:16px auto;padding:0 12px}.tabs{display:flex;gap:7px
 table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-size:11px;color:var(--muted);text-transform:uppercase}.scroll{overflow:auto}
 input,textarea,select{font:inherit;border:1px solid #d0d5dd;border-radius:8px;padding:8px;width:100%;background:#fff}button{border:0;border-radius:8px;padding:9px 12px;font-weight:750;cursor:pointer;background:#e5e7eb}.primary{background:var(--blue);color:#fff}.success{background:#dcfce7;color:#166534}.danger{background:#fee2e2;color:#991b1b}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .metric{display:inline-flex;flex-direction:column;min-width:125px;margin:4px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#f8fafc}.metric b{font-size:21px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.badge{display:inline-block;padding:4px 7px;border-radius:999px;font-size:12px;font-weight:800}.up{background:#dcfce7;color:#166534}.keep{background:#fef3c7;color:#92400e}.down{background:#fee2e2;color:#991b1b}.empty{padding:18px;text-align:center;color:var(--muted)}
+.workout-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.workout-metrics label{display:block;font-size:12px;font-weight:800;color:var(--muted);margin-bottom:5px}.workout-metrics input,.workout-metrics select{min-height:42px}.effort-hint{font-size:11px;color:var(--muted);margin-top:4px}
 canvas{width:100%;height:280px;border:1px solid var(--line);border-radius:10px;background:#fff}
-.photo-grid{display:grid;grid-template-columns:minmax(220px,360px) 1fr;gap:16px;align-items:start}.upload-box{border:2px dashed #cbd5e1;border-radius:12px;padding:16px;background:#f8fafc}.upload-box input[type=file]{padding:10px;background:#fff}.photo-preview{width:100%;max-height:520px;object-fit:contain;border-radius:10px;border:1px solid var(--line);background:#fff;display:block}.photo-empty{padding:30px 14px;text-align:center;color:var(--muted);border:1px dashed #cbd5e1;border-radius:10px;background:#fff}.photo-status{margin-top:8px;font-size:12px;color:var(--muted)}
-@media(max-width:700px){.head{align-items:flex-start;flex-direction:column}.photo-grid{grid-template-columns:1fr}th:nth-child(3),td:nth-child(3){min-width:70px}}
-@media print{header,.tabs,.actions,.no-print,.upload-box{display:none!important}body{background:#fff}.card{box-shadow:none;break-inside:avoid}}
+@media(max-width:700px){.head{align-items:flex-start;flex-direction:column}.workout-metrics{grid-template-columns:1fr 1fr}th:nth-child(3),td:nth-child(3){min-width:70px}}
+@media print{header,.tabs,.actions,.no-print{display:none!important}body{background:#fff}.card{box-shadow:none;break-inside:avoid}}
 </style>
 </head>
 <body>
 <header><div class="head"><div class="title">🏋️ Meu Treino</div><div class="save" id="saveStatus">Salvando automaticamente…</div></div></header>
 <main><div class="tabs" id="tabs"></div><div id="app"></div></main>
-
 <script>
 const KEY="meu_treino_pro_v2";
-const PHOTO_DB="meu_treino_fitness_fotos_v1";
 const workouts={
-"Segunda":{icon:"🟢",title:"Pernas + Peito",ex:[
-["Pêndulo",4,"6–10"],["Cadeira extensora",3,"10–15"],["Stiff com barra ou halteres",3,"8–10"],["Supino inclinado com halteres",4,"8–10"],["Supino reto máquina",3,"8–12"],["Crucifixo máquina",2,"12–15"],["Abdominal máquina",3,"12–15"]]},
-"Terça":{icon:"🔵",title:"Costas + Bíceps",ex:[
-["Barra fixa ou puxada neutra",4,"6–10"],["Remada articulada com apoio no peito",4,"8–12"],["Remada unilateral na polia",3,"10–12"],["Pullover na polia",3,"10–15"],["Rosca direta com barra W",3,"8–12"],["Rosca inclinada com halteres",3,"10–12"],["Rosca martelo com halteres",2,"10–12"]]},
-"Quarta":{icon:"🟠",title:"Pernas + Ombros",ex:[
-["Leg press 45°",4,"8–12"],["Cadeira flexora bilateral",4,"8–12"],["Afundo no Smith",3,"8–12 cada perna"],["Mesa flexora",3,"10–15"],["Desenvolvimento máquina",3,"8–10"],["Elevação lateral na polia",4,"10–15"],["Crucifixo inverso máquina",3,"12–15"],["Panturrilha em pé ou no leg press",4,"10–15"],["Abdominal máquina",3,"12–15"]]},
-"Quinta":{icon:"🔴",title:"Peito + Tríceps",ex:[
-["Supino reto com barra",4,"6–10"],["Supino inclinado máquina",3,"8–12"],["Chest press convergente",3,"8–12"],["Crossover de baixo para cima",2,"12–15"],["Tríceps francês unilateral na polia",3,"10–12"],["Tríceps barra V",3,"8–12"],["Tríceps testa com barra W",2,"10–12"]]},
-"Sexta":{icon:"🟣",title:"Full Body + Pontos fracos",ex:[
-["Hack squat",3,"8–12"],["Flexora unilateral",3,"10–12"],["Remada baixa triângulo",3,"8–12"],["Puxada alta pronada",3,"8–12"],["Supino inclinado com halteres",3,"8–12"],["Elevação lateral",3,"12–15"],["Rosca Scott máquina",2,"10–12"],["Tríceps corda",2,"10–15"],["Panturrilha",4,"12–15"],["Abdominal máquina",3,"12–15"]]}
+"Segunda":{icon:"🟢",title:"Pernas + Peito",ex:[["Pêndulo",4,"6–10"],["Cadeira extensora",3,"10–15"],["Stiff com barra ou halteres",3,"8–10"],["Supino inclinado com halteres",4,"8–10"],["Supino reto máquina",3,"8–12"],["Crucifixo máquina",2,"12–15"],["Abdominal máquina",3,"12–15"]]},
+"Terça":{icon:"🔵",title:"Costas + Bíceps",ex:[["Barra fixa ou puxada neutra",4,"6–10"],["Remada articulada com apoio no peito",4,"8–12"],["Remada unilateral na polia",3,"10–12"],["Pullover na polia",3,"10–15"],["Rosca direta com barra W",3,"8–12"],["Rosca inclinada com halteres",3,"10–12"],["Rosca martelo com halteres",2,"10–12"]]},
+"Quarta":{icon:"🟠",title:"Pernas + Ombros",ex:[["Leg press 45°",4,"8–12"],["Cadeira flexora bilateral",4,"8–12"],["Afundo no Smith",3,"8–12 cada perna"],["Mesa flexora",3,"10–15"],["Desenvolvimento máquina",3,"8–10"],["Elevação lateral na polia",4,"10–15"],["Crucifixo inverso máquina",3,"12–15"],["Panturrilha em pé ou no leg press",4,"10–15"],["Abdominal máquina",3,"12–15"]]},
+"Quinta":{icon:"🔴",title:"Peito + Tríceps",ex:[["Supino reto com barra",4,"6–10"],["Supino inclinado máquina",3,"8–12"],["Chest press convergente",3,"8–12"],["Crossover de baixo para cima",2,"12–15"],["Tríceps francês unilateral na polia",3,"10–12"],["Tríceps barra V",3,"8–12"],["Tríceps testa com barra W",2,"10–12"]]},
+"Sexta":{icon:"🟣",title:"Full Body + Pontos fracos",ex:[["Hack squat",3,"8–12"],["Flexora unilateral",3,"10–12"],["Remada baixa triângulo",3,"8–12"],["Puxada alta pronada",3,"8–12"],["Supino inclinado com halteres",3,"8–12"],["Elevação lateral",3,"12–15"],["Rosca Scott máquina",2,"10–12"],["Tríceps corda",2,"10–15"],["Panturrilha",4,"12–15"],["Abdominal máquina",3,"12–15"]]}
 };
 const sat=[["Elevação lateral",3,"12–15"],["Crucifixo inverso",3,"12–15"],["Rosca martelo",3,"10–12"],["Tríceps corda",3,"10–12"],["Panturrilha",4,"12–15"]];
 let data=JSON.parse(localStorage.getItem(KEY)||"null")||{logs:{}};
 let current="Segunda";
-
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function today(){return new Date().toISOString().slice(0,10)}
 function key(day,date){return day+"|"+date}
 function dateBR(d){return new Date(d+"T12:00:00").toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"})}
 function save(){localStorage.setItem(KEY,JSON.stringify(data));document.getElementById("saveStatus").textContent="✓ Salvo automaticamente • "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}
 function ensure(k,day,date){if(!data.logs[k])data.logs[k]={day,date,rows:{},notes:""};return data.logs[k]}
-function tabs(){
- let h=Object.keys(workouts).map(d=>`<button class="tab ${current==d?"active":""}" onclick="go('${d}')">${workouts[d].icon} ${d}</button>`).join("");
- h+=`<button class="tab ${current=="Sábado"?"active":""}" onclick="go('Sábado')">🟣 Sábado*</button>`;
- h+=`<button class="tab ${current=="Relatórios"?"active":""}" onclick="go('Relatórios')">📊 Relatórios</button>`;
- h+=`<button class="tab ${current=="Histórico"?"active":""}" onclick="go('Histórico')">📈 Histórico</button>`;
- h+=`<button class="tab ${current=="Dados"?"active":""}" onclick="go('Dados')">⚙️ Dados</button>`;
- document.getElementById("tabs").innerHTML=h;
-}
+function tabs(){let h=Object.keys(workouts).map(d=>`<button class="tab ${current==d?"active":""}" onclick="go('${d}')">${workouts[d].icon} ${d}</button>`).join("");h+=`<button class="tab ${current=="Sábado"?"active":""}" onclick="go('Sábado')">🟣 Sábado*</button>`;h+=`<button class="tab ${current=="Relatórios"?"active":""}" onclick="go('Relatórios')">📊 Relatórios</button>`;h+=`<button class="tab ${current=="Histórico"?"active":""}" onclick="go('Histórico')">📈 Histórico</button>`;h+=`<button class="tab ${current=="Dados"?"active":""}" onclick="go('Dados')">⚙️ Dados</button>`;document.getElementById("tabs").innerHTML=h}
 function go(x){current=x;render()}
 function setsFor(row,n,i,k){let out="";for(let s=0;s<n;s++)out+=`<div class="grid"><input type="number" step="0.5" placeholder="kg" value="${esc(row?.["kg"+s]??"")}" onchange="put('${k}',${i},${s},'kg',this.value)"><input type="number" placeholder="reps" value="${esc(row?.["reps"+s]??"")}" onchange="put('${k}',${i},${s},'reps',this.value)"></div>`;return out}
 function put(k,i,s,f,v){let l=ensure(k,current,today());l.rows[i]??={};l.rows[i][f+s]=v;save();renderSuggestion(k,i)}
 function setObservation(k,i,v){let l=ensure(k,current,today());l.rows[i]??={};l.rows[i].observation=v;save()}
-
-function openPhotoDB(){
- return new Promise((resolve,reject)=>{
-  if(!( "indexedDB" in window)){reject(new Error("IndexedDB indisponível neste navegador."));return}
-  const req=indexedDB.open(PHOTO_DB,1);
-  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains("photos"))req.result.createObjectStore("photos")};
-  req.onsuccess=()=>resolve(req.result);
-  req.onerror=()=>reject(req.error||new Error("Não foi possível abrir o armazenamento das fotos."));
- });
-}
-async function getPhoto(k){
- const db=await openPhotoDB();
- return new Promise((resolve,reject)=>{
-  const tx=db.transaction("photos","readonly"),req=tx.objectStore("photos").get(k);
-  req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);
- });
-}
-async function putPhoto(k,value){
- const db=await openPhotoDB();
- return new Promise((resolve,reject)=>{
-  const tx=db.transaction("photos","readwrite");tx.objectStore("photos").put({data:value,updatedAt:Date.now()},k);
-  tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
- });
-}
-async function deletePhoto(k){
- try{
-  const db=await openPhotoDB();
-  await new Promise((resolve,reject)=>{const tx=db.transaction("photos","readwrite");tx.objectStore("photos").delete(k);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});
- }catch(e){}
-}
-function resizePhoto(file){
- return new Promise((resolve,reject)=>{
-  if(!file||!file.type.startsWith("image/")){reject(new Error("Escolha uma imagem."));return}
-  const reader=new FileReader();
-  reader.onload=()=>{
-   const img=new Image();
-   img.onload=()=>{
-    const max=1600,scale=Math.min(1,max/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale));
-    const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);
-    resolve(c.toDataURL("image/jpeg",0.86));
-   };
-   img.onerror=()=>reject(new Error("Não foi possível ler a imagem."));
-   img.src=reader.result;
-  };
-  reader.onerror=()=>reject(reader.error||new Error("Falha ao ler o arquivo."));
-  reader.readAsDataURL(file);
- });
-}
-async function uploadFitnessPhoto(input){
- const file=input.files?.[0];if(!file)return;
- const k=key(current,today()),status=document.getElementById("photoStatus");
- if(status)status.textContent="Processando e salvando a foto…";
- try{
-  const dataUrl=await resizePhoto(file);
-  await putPhoto(k,dataUrl);
-  if(status)status.textContent="✓ Foto do Apple Fitness salva neste treino.";
-  await renderPhoto(k);
- }catch(e){
-  if(status)status.textContent="Não foi possível salvar a foto: "+e.message;
- }
- input.value="";
-}
-async function removeFitnessPhoto(){
- const k=key(current,today());
- await deletePhoto(k);
- await renderPhoto(k);
-}
-async function renderPhoto(k){
- const box=document.getElementById("photoBox");if(!box)return;
- try{
-  const item=await getPhoto(k);
-  if(item?.data){
-   box.innerHTML=`<img class="photo-preview" src="${item.data}" alt="Print do Apple Fitness deste treino"><div class="actions no-print"><button class="danger" type="button" onclick="removeFitnessPhoto()">🗑️ Remover foto</button></div>`;
-  }else{
-   box.innerHTML=`<div class="photo-empty">📱<br><b>Nenhum print anexado</b><br><span class="muted">Anexe aqui o print do Apple Fitness deste treino.</span></div>`;
-  }
- }catch(e){
-  box.innerHTML=`<div class="photo-empty">O armazenamento de fotos não está disponível neste navegador.</div>`;
- }
-}
-
-function renderWorkout(){
- let ex=current=="Sábado"?sat:workouts[current].ex,d=today(),k=key(current,d),l=ensure(k,current,d);
- let rows=ex.map((e,i)=>{let r=l.rows[i]||{};return `<tr><td><b>${i+1}. ${esc(e[0])}</b><div class="muted">Meta ${e[2]} • ${e[1]} séries</div></td><td>${setsFor(r,e[1],i,k)}</td><td><textarea rows="2" placeholder="Observação deste exercício" onchange="setObservation('${k}',${i},this.value)">${esc(r.observation??"")}</textarea><div id="sug${i}" class="muted" style="margin-top:5px"></div></td></tr>`}).join("");
- document.getElementById("app").innerHTML=`<div class="card"><h2>${workouts[current]?.icon||"🟣"} ${current} — ${workouts[current]?.title||"Treino opcional"}</h2><div class="muted">${dateBR(d)} • Os dados são salvos a cada alteração.</div></div>
- <div class="card scroll"><table><thead><tr><th>Exercício</th><th>Séries — kg / reps</th><th>RIR</th></tr></thead><tbody>${rows}</tbody></table>
- <h3>Observações</h3><textarea rows="3" onchange="ensure('${k}','${current}','${d}').notes=this.value;save()" placeholder="Energia, dor, técnica, falha…">${esc(l.notes||"")}</textarea>
- <div class="actions"><button class="primary" onclick="printDay()">🖨️ Relatório diário</button><button onclick="clearDay()">Limpar dia</button></div></div>
- <div class="card"><h2>📱 Apple Fitness</h2><div class="muted">Anexe o print do treino do Apple Fitness. A foto fica vinculada a este treino e é armazenada separadamente dos seus dados de carga/repetições.</div>
- <div class="photo-grid"><div class="upload-box"><label for="fitnessPhoto"><b>Selecionar print</b></label><input id="fitnessPhoto" type="file" accept="image/*" onchange="uploadFitnessPhoto(this)"><div id="photoStatus" class="photo-status">O arquivo é redimensionado para ocupar menos espaço.</div></div><div id="photoBox"><div class="photo-empty">Carregando foto…</div></div></div></div>`;
- ex.forEach((_,i)=>renderSuggestion(k,i));
- renderPhoto(k);
-}
-
+function setMetric(k,f,v){let l=ensure(k,current,today());l[f]=v;save()}
+function renderMetrics(l,k){return `<div class="card"><h3>📊 Dados do treino</h3><div class="workout-metrics"><div><label>Tempo de treino</label><input type="text" placeholder="Ex.: 1h 05min" value="${esc(l.duration??"")}" onchange="setMetric('${k}','duration',this.value)"></div><div><label>BPM médio</label><input type="number" min="0" step="1" placeholder="Ex.: 119" value="${esc(l.avgBpm??"")}" onchange="setMetric('${k}','avgBpm',this.value)"></div><div><label>Calorias gastas</label><input type="number" min="0" step="1" placeholder="Ex.: 507" value="${esc(l.calories??"")}" onchange="setMetric('${k}','calories',this.value)"></div><div><label>Grau de esforço</label><select onchange="setMetric('${k}','effort',this.value)"><option value="">Selecione</option>${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${(String(l.effort)===String(i+1))?"selected":""}>${i+1}/10${i===0?" — muito leve":i===9?" — máximo":""}</option>`).join("")}</select><div class="effort-hint">1 = muito leve • 10 = máximo</div></div></div></div>`}
+function renderWorkout(){let ex=current=="Sábado"?sat:workouts[current].ex,d=today(),k=key(current,d),l=ensure(k,current,d);let rows=ex.map((e,i)=>{let r=l.rows[i]||{};return `<tr><td><b>${i+1}. ${esc(e[0])}</b><div class="muted">Meta ${e[2]} • ${e[1]} séries</div></td><td>${setsFor(r,e[1],i,k)}</td><td><textarea rows="2" placeholder="Observação deste exercício" onchange="setObservation('${k}',${i},this.value)">${esc(r.observation??"")}</textarea><div id="sug${i}" class="muted" style="margin-top:5px"></div></td></tr>`}).join("");document.getElementById("app").innerHTML=`<div class="card"><h2>${workouts[current]?.icon||"🟣"} ${current} — ${workouts[current]?.title||"Treino opcional"}</h2><div class="muted">${dateBR(d)} • Os dados são salvos a cada alteração.</div></div>${renderMetrics(l,k)}<div class="card scroll"><table><thead><tr><th>Exercício</th><th>Séries — kg / reps</th><th>RIR</th></tr></thead><tbody>${rows}</tbody></table><h3>Observações</h3><textarea rows="3" onchange="ensure('${k}','${current}','${d}').notes=this.value;save()" placeholder="Energia, dor, técnica, falha…">${esc(l.notes||"")}</textarea><div class="actions"><button class="primary" onclick="printDay()">🖨️ Relatório diário</button><button onclick="clearDay()">Limpar dia</button></div></div>`;ex.forEach((_,i)=>renderSuggestion(k,i))}
 function parseRange(s){let m=s.match(/(\d+)[–-](\d+)/);return m?[+m[1],+m[2]]:[0,999]}
-function lastExercise(day,name,before){
- let arr=Object.values(data.logs).filter(l=>l.day===day&&l.date<before).sort((a,b)=>b.date.localeCompare(a.date));
- for(let l of arr){let ex=(workouts[day]?.ex||sat).findIndex(x=>x[0]===name);if(ex>=0&&l.rows[ex])return l.rows[ex]}
-}
-function renderSuggestion(k,i){
- let el=document.getElementById("sug"+i);if(!el)return;
- let l=data.logs[k], ex=(workouts[current]?.ex||sat)[i],r=l?.rows[i]||{},range=parseRange(ex[2]);
- let reps=Array.from({length:ex[1]},(_,s)=>Number(r["reps"+s])).filter(Boolean);
- if(!reps.length){el.textContent="";return}
- let last=lastExercise(current,ex[0],l.date);
- let lastReps=last?Array.from({length:ex[1]},(_,s)=>Number(last["reps"+s])).filter(Boolean):[];
- let avg=reps.reduce((a,b)=>a+b,0)/reps.length;
- let msg="";
- if(reps.length>=ex[1]&&avg>=range[1]&&(!lastReps.length||avg>=lastReps.reduce((a,b)=>a+b,0)/lastReps.length))msg=`<span class="badge up">⬆ Pode aumentar</span>`;
- else if(avg<range[0])msg=`<span class="badge down">↘ Mantenha/reduza</span>`;
- else msg=`<span class="badge keep">→ Mantenha</span>`;
- el.innerHTML=msg;
-}
-async function clearDay(){if(confirm("Apagar o treino de hoje?")){const k=key(current,today());delete data.logs[k];await deletePhoto(k);save();render()}}
+function lastExercise(day,name,before){let arr=Object.values(data.logs).filter(l=>l.day===day&&l.date<before).sort((a,b)=>b.date.localeCompare(a.date));for(let l of arr){let ex=(workouts[day]?.ex||sat).findIndex(x=>x[0]===name);if(ex>=0&&l.rows[ex])return l.rows[ex]}}
+function renderSuggestion(k,i){let el=document.getElementById("sug"+i);if(!el)return;let l=data.logs[k],ex=(workouts[current]?.ex||sat)[i],r=l?.rows[i]||{},range=parseRange(ex[2]);let reps=Array.from({length:ex[1]},(_,s)=>Number(r["reps"+s])).filter(Boolean);if(!reps.length){el.textContent="";return}let last=lastExercise(current,ex[0],l.date),lastReps=last?Array.from({length:ex[1]},(_,s)=>Number(last["reps"+s])).filter(Boolean):[],avg=reps.reduce((a,b)=>a+b,0)/reps.length;let msg="";if(reps.length>=ex[1]&&avg>=range[1]&&(!lastReps.length||avg>=lastReps.reduce((a,b)=>a+b,0)/lastReps.length))msg=`<span class="badge up">⬆ Pode aumentar</span>`;else if(avg<range[0])msg=`<span class="badge down">↘ Mantenha/reduza</span>`;else msg=`<span class="badge keep">→ Mantenha</span>`;el.innerHTML=msg}
+function clearDay(){if(confirm("Apagar o treino de hoje?")){delete data.logs[key(current,today())];save();render()}}
 function weekStart(){let d=new Date(),n=d.getDay(),diff=n===0?-6:1-n;d.setDate(d.getDate()+diff);return d.toISOString().slice(0,10)}
 function datesOfWeek(){let s=new Date(weekStart()+"T12:00:00");return Array.from({length:7},(_,i)=>{let d=new Date(s);d.setDate(s.getDate()+i);return d.toISOString().slice(0,10)})}
-function metrics(logs){let sessions=logs.length,sets=0,reps=0,volume=0;logs.forEach(l=>Object.values(l.rows||{}).forEach(r=>{for(let k in r)if(k.startsWith("reps")&&r[k]!=""){let q=Number(r[k])||0;reps+=q;sets++;volume+=(Number(r[k.replace("reps","kg")])||0)*q}}));return {sessions,sets,reps,volume};}
-function report(){
- let ds=datesOfWeek(),logs=Object.values(data.logs).filter(l=>ds.includes(l.date)),m=metrics(logs);
- let rows=ds.map(d=>{let ls=logs.filter(l=>l.date===d),x=metrics(ls);return `<tr><td>${dateBR(d)}</td><td>${ls.map(l=>l.day).join(", ")||"—"}</td><td>${x.sets}</td><td>${x.reps}</td><td>${Math.round(x.volume).toLocaleString("pt-BR")} kg</td></tr>`}).join("");
- document.getElementById("app").innerHTML=`<div class="card"><h2>📊 Relatório semanal</h2>
- <div class="metric"><span>Sessões</span><b>${m.sessions}</b></div><div class="metric"><span>Séries</span><b>${m.sets}</b></div><div class="metric"><span>Reps</span><b>${m.reps}</b></div><div class="metric"><span>Volume</span><b>${Math.round(m.volume).toLocaleString("pt-BR")} kg</b></div>
- <div class="actions"><button class="primary" onclick="window.print()">🖨️ Imprimir / PDF</button><button onclick="exportData()">⬇ Backup</button></div></div>
- <div class="card scroll"><h3>Resumo por dia</h3><table><thead><tr><th>Dia</th><th>Treino</th><th>Séries</th><th>Reps</th><th>Volume</th></tr></thead><tbody>${rows}</tbody></table></div>
- <div class="card"><h3>Evolução semanal</h3><canvas id="chart" width="1000" height="280"></canvas></div>`;
- drawChart(ds,logs);
-}
-function drawChart(ds,logs){
- let c=document.getElementById("chart"),ctx=c.getContext("2d"),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);
- let vals=ds.map(d=>metrics(logs.filter(l=>l.date===d)).volume),max=Math.max(...vals,1),pad=45;
- ctx.strokeStyle="#d0d5dd";ctx.beginPath();ctx.moveTo(pad,20);ctx.lineTo(pad,h-35);ctx.lineTo(w-15,h-35);ctx.stroke();
- ctx.strokeStyle="#2563eb";ctx.lineWidth=3;ctx.beginPath();
- vals.forEach((v,i)=>{let x=pad+i*(w-pad-25)/(vals.length-1||1),y=h-35-(v/max)*(h-60);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
- ctx.stroke();ctx.fillStyle="#17202a";ctx.font="12px system-ui";
- vals.forEach((v,i)=>{let x=pad+i*(w-pad-25)/(vals.length-1||1),y=h-35-(v/max)*(h-60);ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();ctx.fillText((v?Math.round(v):0)+"kg",x-15,y-10);ctx.fillText(ds[i].slice(5),x-14,h-14)});
-}
-function history(){
- let logs=Object.values(data.logs).sort((a,b)=>b.date.localeCompare(a.date)), groups={};
- logs.forEach(l=>{groups[l.date]??=[];groups[l.date].push(l)});
- let html=Object.keys(groups).map(d=>`<div class="card"><h3>${dateBR(d)}</h3>${groups[d].map(l=>{let m=metrics([l]);return `<div><b>${l.day}</b> — ${m.sets} séries • ${m.reps} reps • ${Math.round(m.volume).toLocaleString("pt-BR")} kg</div>`}).join("")}</div>`).join("");
- document.getElementById("app").innerHTML=`<div class="card"><h2>📈 Histórico</h2><div class="muted">Todos os treinos registrados neste navegador.</div></div>${html||'<div class="card empty">Ainda não há treinos registrados.</div>'}`;
-}
-function dataPage(){
- document.getElementById("app").innerHTML=`<div class="card"><h2>⚙️ Dados</h2><p>O aplicativo salva automaticamente cada alteração no navegador deste aparelho.</p><p class="muted">Para trocar de aparelho, faça um backup JSON e importe no novo navegador. As fotos do Apple Fitness ficam armazenadas separadamente no aparelho.</p><div class="actions"><button class="primary" onclick="exportData()">⬇ Exportar backup</button><button onclick="document.getElementById('imp').click()">⬆ Importar backup</button><input id="imp" type="file" accept=".json" hidden onchange="importData(this)"><button class="danger" onclick="if(confirm('Apagar todos os registros?')){data={logs:{}};save();render()}">Apagar tudo</button></div></div>
- <div class="card"><h2>🔥 Regra de progressão</h2><p>6–10 reps: mantenha a carga até atingir o topo da faixa nas séries; depois aumente e volte para a parte baixa. 10–15 reps: mesma lógica.</p><p>Descanso: 2–3 min nos exercícios grandes; 60–90 s nos isoladores.</p></div>`;
-}
+function metrics(logs){let sessions=logs.length,sets=0,reps=0,volume=0,calories=0;logs.forEach(l=>{calories+=Number(l.calories)||0;Object.values(l.rows||{}).forEach(r=>{for(let k in r)if(k.startsWith("reps")&&r[k]!==""){let q=Number(r[k])||0;reps+=q;sets++;volume+=(Number(r[k.replace("reps","kg")])||0)*q}})});return {sessions,sets,reps,volume,calories}}
+function metricText(l){return `${l.duration||"—"} • ${l.avgBpm?esc(l.avgBpm)+" bpm":"—"} • ${l.calories?esc(l.calories)+" kcal":"—"} • ${l.effort?esc(l.effort)+"/10":"—"}`}
+function report(){let ds=datesOfWeek(),logs=Object.values(data.logs).filter(l=>ds.includes(l.date)),m=metrics(logs);let rows=ds.map(d=>{let ls=logs.filter(l=>l.date===d),x=metrics(ls);return `<tr><td>${dateBR(d)}</td><td>${ls.map(l=>l.day).join(", ")||"—"}</td><td>${ls.map(l=>metricText(l)).join("<br>")||"—"}</td><td>${x.sets}</td><td>${x.reps}</td><td>${Math.round(x.volume).toLocaleString("pt-BR")} kg</td></tr>`}).join("");document.getElementById("app").innerHTML=`<div class="card"><h2>📊 Relatório semanal</h2><div class="metric"><span>Sessões</span><b>${m.sessions}</b></div><div class="metric"><span>Séries</span><b>${m.sets}</b></div><div class="metric"><span>Reps</span><b>${m.reps}</b></div><div class="metric"><span>Volume</span><b>${Math.round(m.volume).toLocaleString("pt-BR")} kg</b></div><div class="metric"><span>Calorias</span><b>${m.calories?Math.round(m.calories):0} kcal</b></div><div class="actions"><button class="primary" onclick="window.print()">🖨️ Imprimir / PDF</button><button onclick="exportData()">⬇ Backup</button></div></div><div class="card scroll"><h3>Resumo por dia</h3><table><thead><tr><th>Dia</th><th>Treino</th><th>Tempo • BPM • kcal • esforço</th><th>Séries</th><th>Reps</th><th>Volume</th></tr></thead><tbody>${rows}</tbody></table></div><div class="card"><h3>Evolução semanal</h3><canvas id="chart" width="1000" height="280"></canvas></div>`;drawChart(ds,logs)}
+function drawChart(ds,logs){let c=document.getElementById("chart"),ctx=c.getContext("2d"),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);let vals=ds.map(d=>metrics(logs.filter(l=>l.date===d)).volume),max=Math.max(...vals,1),pad=45;ctx.strokeStyle="#d0d5dd";ctx.beginPath();ctx.moveTo(pad,20);ctx.lineTo(pad,h-35);ctx.lineTo(w-15,h-35);ctx.stroke();ctx.strokeStyle="#2563eb";ctx.lineWidth=3;ctx.beginPath();vals.forEach((v,i)=>{let x=pad+i*(w-pad-25)/(vals.length-1||1),y=h-35-(v/max)*(h-60);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();ctx.fillStyle="#17202a";ctx.font="12px system-ui";vals.forEach((v,i)=>{let x=pad+i*(w-pad-25)/(vals.length-1||1),y=h-35-(v/max)*(h-60);ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();ctx.fillText((v?Math.round(v):0)+"kg",x-15,y-10);ctx.fillText(ds[i].slice(5),x-14,h-14)})}
+function history(){let logs=Object.values(data.logs).sort((a,b)=>b.date.localeCompare(a.date)),groups={};logs.forEach(l=>{groups[l.date]??=[];groups[l.date].push(l)});let html=Object.keys(groups).map(d=>`<div class="card"><h3>${dateBR(d)}</h3>${groups[d].map(l=>{let m=metrics([l]);return `<div style="margin-bottom:8px"><b>${l.day}</b> — ${m.sets} séries • ${m.reps} reps • ${Math.round(m.volume).toLocaleString("pt-BR")} kg<br><span class="muted">Tempo: ${esc(l.duration||"—")} • BPM médio: ${esc(l.avgBpm||"—")} • Calorias: ${esc(l.calories||"—")} kcal • Esforço: ${esc(l.effort||"—")}/10</span></div>`}).join("")}</div>`).join("");document.getElementById("app").innerHTML=`<div class="card"><h2>📈 Histórico</h2><div class="muted">Todos os treinos registrados neste navegador.</div></div>${html||'<div class="card empty">Ainda não há treinos registrados.</div>'}`}
+function dataPage(){document.getElementById("app").innerHTML=`<div class="card"><h2>⚙️ Dados</h2><p>O aplicativo salva automaticamente cada alteração no navegador deste aparelho.</p><p class="muted">O backup JSON inclui também tempo, BPM médio, calorias e grau de esforço.</p><div class="actions"><button class="primary" onclick="exportData()">⬇ Exportar backup</button><button onclick="document.getElementById('imp').click()">⬆ Importar backup</button><input id="imp" type="file" accept=".json" hidden onchange="importData(this)"><button class="danger" onclick="if(confirm('Apagar todos os registros?')){data={logs:{}};save();render()}">Apagar tudo</button></div></div><div class="card"><h2>🔥 Regra de progressão</h2><p>6–10 reps: mantenha a carga até atingir o topo da faixa nas séries; depois aumente e volte para a parte baixa. 10–15 reps: mesma lógica.</p><p>Descanso: 2–3 min nos exercícios grandes; 60–90 s nos isoladores.</p></div>`}
 function exportData(){let b=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="backup-meu-treino-"+today()+".json";a.click();URL.revokeObjectURL(a.href)}
 function importData(inp){let f=inp.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{data=JSON.parse(r.result);save();render();alert("Backup importado.")}catch(e){alert("Backup inválido.")}};r.readAsText(f)}
 function printDay(){window.print()}
