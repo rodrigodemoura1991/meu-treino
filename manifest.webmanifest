@@ -4,6 +4,9 @@
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f4f4f6",
-  "theme_color": "#111111",
-  "lang": "pt-BR"
+  "theme_color": "#ff7e00",
+  "lang": "pt-BR",
+  "icons": [
+    {"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"}
+  ]
 }
