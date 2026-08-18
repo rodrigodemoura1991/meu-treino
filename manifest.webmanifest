@@ -7,6 +7,6 @@
   "theme_color": "#ff7e00",
   "lang": "pt-BR",
   "icons": [
-    {"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"}
+    {"src":"https://www.emoji.family/api/emojis/1f3cb-fe0f/noto/png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
   ]
 }
