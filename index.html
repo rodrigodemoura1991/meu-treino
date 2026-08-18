@@ -4,17 +4,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Meu Treino — Musculação</title>
-<link rel="manifest" href="manifest.webmanifest?v=20260818final1">
+<link rel="manifest" href="manifest.webmanifest?v=20260818stable3">
 <link rel="apple-touch-icon" href="https://www.emoji.family/api/emojis/1f3cb-fe0f/noto/png?v=6">
-<link rel="stylesheet" href="style.css?v=20260818final1">
+<link rel="stylesheet" href="style.css?v=20260818stable3">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 <header class="top"><div class="topin"><div class="brand"><div class="brandmark">🏋️</div><div><strong>MEU TREINO</strong><small>MUSCULAÇÃO • PROGRESSÃO</small></div></div><div id="cloudStatus" class="status">☁ Carregando...</div></div></header>
 <main class="main"><div id="app"></div></main>
-<script>(async()=>{try{if('serviceWorker' in navigator){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()))}if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch(e){console.log(e)}})();</script>
-<script src="app.js?v=20260818stable2"></script>
+<script>
+try {
+  const raw=localStorage.getItem('meu_treino_reset_v1');
+  if(raw) JSON.parse(raw);
+} catch(e) {
+  localStorage.removeItem('meu_treino_reset_v1');
+}
+window.addEventListener('error',function(e){
+  console.error('Meu Treino:',e.error||e.message);
+  const app=document.getElementById('app');
+  if(app && !app.innerHTML.trim()) app.innerHTML='<section class="card empty"><div class="emptyicon">⚠️</div><h2>Não foi possível carregar</h2><p>Atualize esta página uma vez. Seus dados da nuvem permanecem preservados.</p><button class="primary" onclick="location.reload()">Atualizar</button></section>';
+});
+(async()=>{try{if('serviceWorker' in navigator){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()))}if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch(e){console.log(e)}})();
+</script>
+<script src="app.js?v=20260818stable3"></script>
 <script src="pdf.js?v=20260818pdf3"></script>
 </body>
 </html>
