@@ -4,22 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Meu Treino — Musculação</title>
-<link rel="manifest" href="manifest.webmanifest?v=20260818icon5">
-<link rel="apple-touch-icon" href="https://www.emoji.family/api/emojis/1f3cb-fe0f/noto/png?v=5">
-<link rel="stylesheet" href="style.css?v=20260818reset2">
+<link rel="manifest" href="manifest.webmanifest?v=20260818final1">
+<link rel="apple-touch-icon" href="https://www.emoji.family/api/emojis/1f3cb-fe0f/noto/png?v=6">
+<link rel="stylesheet" href="style.css?v=20260818final1">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
-<script>(function(){const nativeISO=Date.prototype.toISOString;Date.prototype.toISOString=function(){const d=new Date(this.getTime()),shifted=new Date(d.getTime()-d.getTimezoneOffset()*60000),base=nativeISO.call(shifted).replace('Z',''),off=-d.getTimezoneOffset(),sign=off>=0?'+':'-',abs=Math.abs(off),hh=String(Math.floor(abs/60)).padStart(2,'0'),mm=String(abs%60).padStart(2,'0');return base+sign+hh+':'+mm}})();</script>
 </head>
 <body>
 <header class="top"><div class="topin"><div class="brand"><div class="brandmark">🏋️</div><div><strong>MEU TREINO</strong><small>MUSCULAÇÃO • PROGRESSÃO</small></div></div><div id="cloudStatus" class="status">☁ Carregando...</div></div></header>
 <main class="main"><div id="app"></div></main>
 <script>(async()=>{try{if('serviceWorker' in navigator){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()))}if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch(e){console.log(e)}})();</script>
-<script>try{localStorage.removeItem('meu_treino_reset_v1')}catch(e){}</script>
-<script src="app.js?v=20260818autosave6"></script>
-<script src="progressao.js?v=20260818progressao4"></script>
-<script src="pdf.js?v=20260818pdf2"></script>
-<script src="timer2.js?v=20260818timer2"></script>
-<script>(function(){const timers=new WeakMap(),fields='input.field, textarea.obs, .metrics input, textarea.notes';document.addEventListener('input',function(e){const el=e.target;if(!el.matches(fields))return;clearTimeout(timers.get(el));timers.set(el,setTimeout(function(){el.dispatchEvent(new Event('change',{bubbles:true}))},700))},true)})();</script>
+<script src="app.js?v=20260818final1"></script>
+<script src="pdf.js?v=20260818pdf3"></script>
 </body>
 </html>
