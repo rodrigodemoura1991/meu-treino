@@ -16,7 +16,7 @@
 <script>(async()=>{try{if('serviceWorker' in navigator){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()))}if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch(e){console.log(e)}})();</script>
 <script>try{localStorage.removeItem('meu_treino_reset_v1')}catch(e){}</script>
 <script src="app.js?v=20260818autosave4"></script>
-<script src="progressao.js?v=20260818progressao1"></script>
+<script src="progressao.js?v=20260818progressao2"></script>
 <script>(function(){const timers=new WeakMap(),fields='input.field, textarea.obs, .metrics input, textarea.notes';document.addEventListener('input',function(e){const el=e.target;if(!el.matches(fields))return;clearTimeout(timers.get(el));timers.set(el,setTimeout(function(){el.dispatchEvent(new Event('change',{bubbles:true}))},700))},true)})();</script>
 </body>
 </html>
