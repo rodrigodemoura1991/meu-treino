@@ -1,31 +1,37 @@
-/* Avaliação automática de carga baseada na faixa de repetições do treino. */
+/* Avaliação automática de carga conforme a faixa de repetições do treino. */
 (function(){
   function parseRange(range){const m=String(range||'').match(/(\d+)\s*[–-]\s*(\d+)/);return m?{lo:+m[1],hi:+m[2]}:null}
   function roundLoad(v){return isFinite(v)&&v>0?(Math.round(v*2)/2).toLocaleString('pt-BR',{maximumFractionDigits:1}):''}
-  function readCard(i){
-    const cards=document.querySelectorAll('.exercise'),card=cards[i];
-    if(!card)return null;
-    const range=parseRange(card.querySelector('.tag')?.textContent);
-    if(!range)return null;
-    const fields=card.querySelectorAll('.setrow');
-    const sets=[];
-    fields.forEach(row=>{const inputs=row.querySelectorAll('input');const kg=Number(inputs[0]?.value),reps=Number(inputs[1]?.value);if(kg>0&&reps>0)sets.push({kg,reps})});
-    return {range,sets,total:fields.length}
+  function readCard(card){
+    const range=parseRange(card.querySelector('.tag')?.textContent);if(!range)return null;
+    const rows=[...card.querySelectorAll('.setrow')];
+    const sets=rows.map(row=>{const inputs=row.querySelectorAll('input');return {kg:Number(inputs[0]?.value),reps:Number(inputs[1]?.value)}});
+    const filled=sets.filter(x=>x.kg>0&&x.reps>0);
+    return {range,sets,filled,total:rows.length};
   }
   function recommendation(data){
-    if(!data||!data.sets.length)return null;
-    if(data.sets.length<data.total)return {type:'partial',text:'↳ Preencha todas as séries para avaliar a carga.'};
-    const {lo,hi}=data.range,sets=data.sets;
-    const allTop=sets.every(x=>x.reps>=hi),below=sets.filter(x=>x.reps<lo).length,avg=sets.reduce((a,x)=>a+x.reps,0)/sets.length;
+    if(!data||!data.filled.length)return null;
+    if(data.filled.length<data.total)return {type:'partial',text:'↳ Preencha todas as séries para avaliar a carga.'};
+    const {lo,hi}=data.range,sets=data.filled;
+    const allTop=sets.every(x=>x.reps>=hi);
+    const below=sets.filter(x=>x.reps<lo).length;
+    const avg=sets.reduce((a,x)=>a+x.reps,0)/sets.length;
     const base=sets[sets.length-1].kg||sets.reduce((a,x)=>a+x.kg,0)/sets.length;
-    if(allTop)return {type:'up',text:'⬆ SUBIR CARGA',detail:'Topo da faixa em todas as séries. Próximo treino: ~'+roundLoad(base*1.025)+' kg.'};
-    if(below>=2||avg<lo)return {type:'down',text:'⬇ BAIXAR CARGA',detail:'Abaixo da faixa em várias séries. Próximo treino: ~'+roundLoad(base*0.95)+' kg.'};
-    return {type:'keep',text:'→ MANTER CARGA',detail:'Desempenho dentro da faixa. Busque chegar ao topo antes de aumentar.'};
+    if(allTop)return {type:'up',text:'⬆ SUBIR CARGA',detail:'Você bateu o topo da faixa em todas as séries. Próximo treino: ~'+roundLoad(base*1.025)+' kg.'};
+    if(below>=2||avg<lo)return {type:'down',text:'⬇ BAIXAR CARGA',detail:'As repetições ficaram abaixo da faixa. Próximo treino: ~'+roundLoad(base*0.95)+' kg.'};
+    return {type:'keep',text:'→ MANTER CARGA',detail:'Carga adequada. Tente aumentar as repetições até o topo da faixa antes de subir o peso.'};
   }
-  window.suggest=function(i){
-    const el=document.getElementById('sg'+i);if(!el)return;
-    const rec=recommendation(readCard(i));if(!rec){el.innerHTML='';return}
-    el.innerHTML='<span class="'+rec.type+'">'+(rec.type==='partial'?rec.text:'<b>'+rec.text+'</b><small>'+rec.detail+'</small>')+'</span>';
-  };
-  const css=document.createElement('style');css.textContent='.suggest{margin-top:10px;font-size:14px}.suggest span{display:block;padding:10px 12px;border-radius:10px}.suggest small{display:block;margin-top:4px;font-size:12px;font-weight:500}.suggest .up{background:#e8f7ec;color:#18743b}.suggest .down{background:#fff0f0;color:#b42318}.suggest .keep{background:#fff7e8;color:#9a5a00}.suggest b{font-size:14px}';document.head.appendChild(css);
+  function update(card,i){
+    let el=card.querySelector('.suggest');
+    if(!el){el=document.createElement('div');el.className='suggest';card.querySelector('.sets')?.after(el)}
+    const rec=recommendation(readCard(card));
+    el.innerHTML=rec?'<span class="'+rec.type+'">'+(rec.type==='partial'?rec.text:'<b>'+rec.text+'</b><small>'+rec.detail+'</small>')+'</span>':'';
+  }
+  function scan(){document.querySelectorAll('.exercise').forEach((card,i)=>update(card,i))}
+  const css=document.createElement('style');css.textContent='.suggest{margin:10px 0 2px;font-size:14px}.suggest span{display:block;padding:11px 13px;border-radius:12px;font-weight:600}.suggest small{display:block;margin-top:4px;font-size:12px;font-weight:500;line-height:1.35}.suggest .up{background:#e8f7ec;color:#18743b}.suggest .down{background:#fff0f0;color:#b42318}.suggest .keep{background:#fff7e8;color:#9a5a00}.suggest .partial{background:#eef4ff;color:#315b9a}';document.head.appendChild(css);
+  const observer=new MutationObserver(()=>scan());
+  observer.observe(document.body,{childList:true,subtree:true});
+  document.addEventListener('input',e=>{if(e.target.matches('.exercise input.field'))setTimeout(scan,50)},true);
+  document.addEventListener('change',e=>{if(e.target.matches('.exercise input.field'))setTimeout(scan,50)},true);
+  setTimeout(scan,100);
 })();
