@@ -4,10 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Meu Treino — Musculação</title>
-<link rel="manifest" href="manifest.webmanifest?v=20260818icon1">
-<link rel="apple-touch-icon" href="icon-192.png?v=20260818icon1">
+<link rel="manifest" href="manifest.webmanifest?v=20260818icon2">
+<link rel="apple-touch-icon" href="icon-192.png?v=20260818icon2">
 <link rel="stylesheet" href="style.css?v=20260818reset1">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js" crossorigin="anonymous"></script>
+<script>
+// O app usa toISOString() para formar a data do treino. No Brasil isso pode
+// virar o dia seguinte depois das 21h. Mantemos a mesma precisão ISO, mas
+// usando o fuso horário local do aparelho.
+(function(){
+  const nativeISO=Date.prototype.toISOString;
+  Date.prototype.toISOString=function(){
+    const d=new Date(this.getTime());
+    const shifted=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+    const base=nativeISO.call(shifted).replace('Z','');
+    const off=-d.getTimezoneOffset();
+    const sign=off>=0?'+':'-';
+    const abs=Math.abs(off),hh=String(Math.floor(abs/60)).padStart(2,'0'),mm=String(abs%60).padStart(2,'0');
+    return base+sign+hh+':'+mm;
+  };
+})();
+</script>
 </head>
 <body>
 <header class="top"><div class="topin"><div class="brand"><div class="brandmark">🏋️</div><div><strong>MEU TREINO</strong><small>MUSCULAÇÃO • PROGRESSÃO</small></div></div><div id="cloudStatus" class="status">☁ Carregando...</div></div></header>
@@ -15,6 +32,24 @@
 <script>
 (async()=>{try{if('serviceWorker' in navigator){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()))}if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch(e){console.log(e)}})();
 </script>
-<script src="app.js?v=20260818reset1"></script>
+<script src="app.js?v=20260818autosave2"></script>
+<script>
+// Salvamento automático: enquanto o usuário digita carga, repetições,
+// métricas ou observações, o mesmo mecanismo de salvamento do app é acionado
+// automaticamente após uma pequena pausa. O dado local é salvo primeiro e,
+// quando houver login, a sincronização com a nuvem segue normalmente.
+(function(){
+  const timers=new WeakMap();
+  const fields='input.field, textarea.obs, .metrics input, textarea.notes';
+  document.addEventListener('input',function(e){
+    const el=e.target;
+    if(!el.matches(fields))return;
+    clearTimeout(timers.get(el));
+    timers.set(el,setTimeout(function(){
+      el.dispatchEvent(new Event('change',{bubbles:true}));
+    },700));
+  },true);
+})();
+</script>
 </body>
 </html>
