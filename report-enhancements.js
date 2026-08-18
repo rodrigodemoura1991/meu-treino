@@ -21,13 +21,13 @@
   function buildPeriodPdf(start,end,title,file){
     const J=window.jspdf?.jsPDF;
     if(!J){alert('O gerador de PDF ainda está carregando.');return}
-    const logs=Object.values(window.data?.logs||{}).filter(l=>l.date&&l.date>=start&&l.date<=end).sort((a,b)=>a.date.localeCompare(b.date));
+    const logs=Object.values(data?.logs||{}).filter(l=>l.date&&l.date>=start&&l.date<=end).sort((a,b)=>a.date.localeCompare(b.date));
     const doc=new J({unit:'mm',format:'a4'});
     doc.setFillColor(242,111,0);doc.roundedRect(12,10,186,22,4,4,'F');
     doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(17);doc.text('MEU TREINO',20,23);
     doc.setTextColor(25,35,48);doc.setFontSize(16);doc.text(title,14,43);
     doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text(start+' a '+end,14,50);
-    const vol=logs.reduce((a,l)=>a+(window.volumeForLog?window.volumeForLog(l):0),0);
+    const vol=logs.reduce((a,l)=>a+volumeForLog(l),0);
     const cardioMin=logs.reduce((a,l)=>a+cardioMinutes(l.cardio?.duration),0);
     const cardioKcal=logs.reduce((a,l)=>a+n(l.cardio?.calories),0);
     const workoutKcal=logs.reduce((a,l)=>a+n(l.calories),0);
@@ -48,11 +48,11 @@
     logs.forEach(l=>{
       if(y>270){doc.addPage();y=18}
       doc.setFont('helvetica','bold');doc.setFontSize(10);
-      doc.text(l.date+' — '+(l.day||'Treino')+' — '+(window.workouts?.[l.day]?.title||'Treino opcional'),14,y);
+      doc.text(l.date+' — '+(l.day||'Treino')+' — '+(workouts[l.day]?.title||'Treino opcional'),14,y);
       y+=5;
       doc.setFont('helvetica','normal');doc.setFontSize(8.2);
       const c=l.cardio||{};
-      const line='Volume '+Math.round(window.volumeForLog?window.volumeForLog(l):0).toLocaleString('pt-BR')+' kg | Cal. treino '+(l.calories||'—')+' kcal | Cardio '+(c.duration||'—')+(c.type?' ('+c.type+')':'')+' | Cal. cardio '+(c.calories||'—')+' kcal | '+(l.avgBpm||'—')+' bpm | '+(l.duration||'—')+' | RPE '+(l.effort||'—');
+      const line='Volume '+Math.round(volumeForLog(l)).toLocaleString('pt-BR')+' kg | Cal. treino '+(l.calories||'—')+' kcal | Cardio '+(c.duration||'—')+(c.type?' ('+c.type+')':'')+' | Cal. cardio '+(c.calories||'—')+' kcal | '+(l.avgBpm||'—')+' bpm | '+(l.duration||'—')+' | RPE '+(l.effort||'—');
       const chunks=doc.splitTextToSize(line,170);
       doc.text(chunks,18,y);
       y+=Math.max(7,chunks.length*4.2);
