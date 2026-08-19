@@ -1,0 +1,3 @@
+VERSÃO DE RECUPERAÇÃO OFICIAL
+Commit base: 29e3371db1abab220eb0587a3f13deed43b57bee
+Esta alteração de rascunho foi feita posteriormente. O backup oficial permanece na branch backup-2026-08-18-funcionando.
