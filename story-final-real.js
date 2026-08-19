@@ -1,174 +1,45 @@
-/* STORY REAL — versão final 2026-08-19
-   O botão de Instagram sempre usa esta rotina, independentemente dos geradores antigos.
-   Fundo fixo: story-bg.jpg. Métricas vêm exclusivamente do treino selecionado no Histórico.
+/* STORY REAL — seleção corrigida
+   O Story usa EXATAMENTE a data escolhida no campo do Histórico/Relatórios.
+   A fonte dos registros é a mesma variável global lexical `data` usada pelo app.
 */
 (function(){
   const W=1080,H=1920;
-  const BG='story-bg.jpg?v=20260819storybg4';
-  const esc=s=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
-  const n=v=>{const x=Number(String(v??'').replace(',','.'));return Number.isFinite(x)?x:0};
+  const BG='story-bg.jpg?v=20260819storybg5';
   const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+  const n=v=>{const x=Number(String(v??'').replace(',','.'));return Number.isFinite(x)?x:0};
+  const appData=()=>{try{if(typeof data!=='undefined'&&data&&data.logs)return data}catch(e){}return window.data&&window.data.logs?window.data:null};
 
-  function time(v){
-    if(v===undefined||v===null||String(v).trim()==='')return '—';
-    const s=String(v).trim();
-    if(/^\d+:\d{1,2}$/.test(s))return s;
-    if(/^\d+:\d{1,2}:\d{1,2}$/.test(s)){const p=s.split(':');return p[0]+':'+String(p[1]).padStart(2,'0')}
-    const x=n(s);if(!x)return '—';return Math.floor(x/60)+':'+String(Math.round(x%60)).padStart(2,'0');
-  }
-
-  function cardio(v){
-    if(v===undefined||v===null||String(v).trim()==='')return '—';
-    const s=String(v).trim().toLowerCase().replace(',','.');
-    const c=s.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);if(c)return c[1]+':'+String(c[2]).padStart(2,'0');
-    const h=s.match(/(\d+(?:\.\d+)?)\s*h/),m=s.match(/(\d+(?:\.\d+)?)\s*(?:min|m)\b/);
-    if(h||m){const mins=Math.round((h?n(h[1])*60:0)+(m?n(m[1]):0));return Math.floor(mins/60)+':'+String(mins%60).padStart(2,'0')}
-    const x=n(s);return x?Math.floor(x/60)+':'+String(Math.round(x%60)).padStart(2,'0'):'—';
-  }
-
-  function volume(l){
-    let total=0;
-    Object.values(l?.rows||{}).forEach(r=>{
-      for(let s=0;s<50;s++){
-        const kg=n(r?.['kg'+s]),reps=n(r?.['reps'+s]);
-        if(kg>0&&reps>0)total+=kg*reps;
-      }
-    });
-    return total;
-  }
-
-  function calories(l){
-    const x=n(l?.calories)+n(l?.cardio?.calories);
-    return x?Math.round(x).toLocaleString('pt-BR')+' kcal':'—';
-  }
-
-  function info(l){
-    const d=l?.date?new Date(l.date+'T12:00:00'):null;
-    return {
-      date:d&&!isNaN(d)?d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}):(l?.date||'—'),
-      day:d&&!isNaN(d)?d.toLocaleDateString('pt-BR',{weekday:'long'}):(l?.day||'Treino'),
-      title:window.workouts?.[l?.day]?.title||l?.title||l?.day||'Treino'
-    };
-  }
-
-  async function temperature(l){
-    if(l?.temperature!==undefined&&l?.temperature!==null&&String(l.temperature).trim()!==''){
-      const s=String(l.temperature).trim();return /°C/i.test(s)?s:s+' °C';
-    }
-    try{
-      const date=l?.date||'';
-      const lat=-26.081,lon=-53.053;
-      let url;
-      if(date && date<today()) url='https://archive-api.open-meteo.com/v1/archive?latitude='+lat+'&longitude='+lon+'&start_date='+date+'&end_date='+date+'&daily=temperature_2m_mean&timezone=America%2FSao_Paulo';
-      else url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m&timezone=America%2FSao_Paulo';
-      const r=await fetch(url);if(!r.ok)throw 0;const j=await r.json();
-      const t=date&&date<today()?n(j?.daily?.temperature_2m_mean?.[0]):n(j?.current?.temperature_2m);
-      return t?Math.round(t)+' °C':'—';
-    }catch(e){return '—'}
-  }
-
-  function img(src){return new Promise(resolve=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>resolve(i);i.onerror=()=>resolve(null);i.src=src;})}
-
-  function cover(ctx,bg){
-    if(bg){const s=Math.max(W/bg.width,H/bg.height),dw=bg.width*s,dh=bg.height*s;ctx.drawImage(bg,(W-dw)/2,(H-dh)/2,dw,dh)}
-    else{ctx.fillStyle='#101820';ctx.fillRect(0,0,W,H)}
-    const top=ctx.createLinearGradient(0,0,0,H);top.addColorStop(0,'rgba(0,0,0,.78)');top.addColorStop(.45,'rgba(0,0,0,.32)');top.addColorStop(1,'rgba(0,0,0,.80)');ctx.fillStyle=top;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='rgba(242,111,0,.96)';ctx.fillRect(0,0,W,12);
-  }
-
+  function time(v){if(v==null||String(v).trim()==='')return '—';const s=String(v).trim();if(/^\d+:\d{1,2}$/.test(s))return s;if(/^\d+:\d{1,2}:\d{1,2}$/.test(s)){const p=s.split(':');return p[0]+':'+String(p[1]).padStart(2,'0')}const x=n(s);return x?Math.floor(x/60)+':'+String(Math.round(x%60)).padStart(2,'0'):'—'}
+  function cardio(v){if(v==null||String(v).trim()==='')return '—';const s=String(v).trim().toLowerCase().replace(',','.');const c=s.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);if(c)return c[1]+':'+String(c[2]).padStart(2,'0');const h=s.match(/(\d+(?:\.\d+)?)\s*h/),m=s.match(/(\d+(?:\.\d+)?)\s*(?:min|m)\b/);if(h||m){const mins=Math.round((h?n(h[1])*60:0)+(m?n(m[1]):0));return Math.floor(mins/60)+':'+String(mins%60).padStart(2,'0')}const x=n(s);return x?Math.floor(x/60)+':'+String(Math.round(x%60)).padStart(2,'0'):'—'}
+  function volume(l){let total=0;Object.values(l?.rows||{}).forEach(r=>{for(let s=0;s<50;s++){const kg=n(r?.['kg'+s]),reps=n(r?.['reps'+s]);if(kg>0&&reps>0)total+=kg*reps}});return total}
+  function calories(l){const x=n(l?.calories)+n(l?.cardio?.calories);return x?Math.round(x).toLocaleString('pt-BR')+' kcal':'—'}
+  function info(l){const d=l?.date?new Date(l.date+'T12:00:00'):null;return {date:d&&!isNaN(d)?d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}):(l?.date||'—'),day:d&&!isNaN(d)?d.toLocaleDateString('pt-BR',{weekday:'long'}):(l?.day||'Treino'),title:window.workouts?.[l?.day]?.title||l?.title||l?.day||'Treino'}}
+  async function temperature(l){if(l?.temperature!==undefined&&l?.temperature!==null&&String(l.temperature).trim()!==''){const s=String(l.temperature).trim();return /°C/i.test(s)?s:s+' °C'}try{const date=l?.date||'',lat=-26.081,lon=-53.053;let url;if(date&&date<today())url='https://archive-api.open-meteo.com/v1/archive?latitude='+lat+'&longitude='+lon+'&start_date='+date+'&end_date='+date+'&daily=temperature_2m_mean&timezone=America%2FSao_Paulo';else url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m&timezone=America%2FSao_Paulo';const r=await fetch(url);if(!r.ok)throw 0;const j=await r.json();const t=date&&date<today()?n(j?.daily?.temperature_2m_mean?.[0]):n(j?.current?.temperature_2m);return t?Math.round(t)+' °C':'—'}catch(e){return '—'}}
+  function img(src){return new Promise(resolve=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>resolve(i);i.onerror=()=>resolve(null);i.src=src})}
+  function cover(ctx,bg){if(bg){const s=Math.max(W/bg.width,H/bg.height),dw=bg.width*s,dh=bg.height*s;ctx.drawImage(bg,(W-dw)/2,(H-dh)/2,dw,dh)}else{ctx.fillStyle='#101820';ctx.fillRect(0,0,W,H)}const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(0,0,0,.78)');g.addColorStop(.45,'rgba(0,0,0,.32)');g.addColorStop(1,'rgba(0,0,0,.80)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.fillStyle='rgba(242,111,0,.96)';ctx.fillRect(0,0,W,12)}
   function rounded(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+  function metric(ctx,x,y,w,h,icon,label,value){ctx.fillStyle='rgba(12,18,24,.78)';rounded(ctx,x,y,w,h,28);ctx.strokeStyle='rgba(255,255,255,.20)';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#f26f00';rounded(ctx,x+24,y+24,8,h-48,4);ctx.fillStyle='#fff';ctx.font='700 29px Arial,sans-serif';ctx.fillText(icon,x+55,y+62);ctx.fillStyle='#cbd4dc';ctx.font='800 22px Arial,sans-serif';ctx.fillText(label,x+100,y+62);ctx.fillStyle='#fff';ctx.font='900 51px Arial,sans-serif';ctx.fillText(value,x+55,y+130)}
+  async function make(l){const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');const bg=await img(BG);cover(ctx,bg);const i=info(l),temp=await temperature(l),vol=volume(l);ctx.fillStyle='#fff';ctx.font='900 64px Arial,sans-serif';ctx.fillText('MEU TREINO',60,145);ctx.fillStyle='#d5dde4';ctx.font='700 25px Arial,sans-serif';ctx.fillText('MUSCULAÇÃO  •  PROGRESSÃO',63,187);ctx.fillStyle='#fff';ctx.font='900 55px Arial,sans-serif';ctx.fillText(i.title,60,330);ctx.fillStyle='#f26f00';ctx.font='900 31px Arial,sans-serif';ctx.fillText(i.day.toUpperCase(),62,378);ctx.fillStyle='#fff';ctx.font='700 27px Arial,sans-serif';ctx.fillText(i.date,62,421);const x=50,w=980,h=180;metric(ctx,x,505,w,h,'⏱','TEMPO DE TREINO',time(l.duration));metric(ctx,x,707,w,h,'🔥','CALORIAS GASTAS',calories(l));metric(ctx,x,909,w,h,'🚴','TEMPO DE CARDIO',cardio(l?.cardio?.duration));metric(ctx,x,1111,w,h,'🏋️','PESO LEVANTADO',vol?Math.round(vol).toLocaleString('pt-BR')+' kg':'—');metric(ctx,x,1313,w,h,'🌡','TEMPERATURA',temp);ctx.fillStyle='rgba(0,0,0,.56)';rounded(ctx,50,1545,980,150,24);ctx.fillStyle='#fff';ctx.font='800 24px Arial,sans-serif';ctx.fillText('TREINO REGISTRADO NO HISTÓRICO',82,1595);ctx.fillStyle='#d5dde4';ctx.font='600 22px Arial,sans-serif';ctx.fillText('Dados calculados automaticamente pelo Meu Treino',82,1635);ctx.fillStyle='#f26f00';ctx.fillRect(60,1780,330,6);ctx.fillStyle='#fff';ctx.font='800 25px Arial,sans-serif';ctx.fillText('MEU TREINO  •  PROGRESSÃO',60,1835);ctx.fillStyle='#d5dde4';ctx.font='600 20px Arial,sans-serif';ctx.fillText('#MEUTREINO  #TREINO  #DISCIPLINA',60,1875);return c}
 
-  function metric(ctx,x,y,w,h,icon,label,value){
-    ctx.fillStyle='rgba(12,18,24,.78)';rounded(ctx,x,y,w,h,28);
-    ctx.strokeStyle='rgba(255,255,255,.20)';ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle='#f26f00';rounded(ctx,x+24,y+24,8,h-48,4);
-    ctx.fillStyle='#fff';ctx.font='700 29px Arial,sans-serif';ctx.fillText(icon,x+55,y+62);
-    ctx.fillStyle='#cbd4dc';ctx.font='800 22px Arial,sans-serif';ctx.fillText(label,x+100,y+62);
-    ctx.fillStyle='#fff';ctx.font='900 51px Arial,sans-serif';ctx.fillText(value,x+55,y+130);
+  function selectedDate(){
+    // reportStoryDate é o seletor específico do Story. Nunca usar a data de hoje
+    // como fallback quando existe um seletor na tela.
+    const el=document.getElementById('reportStoryDate');
+    if(el&&el.value)return el.value;
+    const period=document.getElementById('periodReportDate');
+    if(period&&period.value)return period.value;
+    return null;
   }
-
-  async function make(l){
-    const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');
-    const bg=await img(BG);cover(ctx,bg);
-    const i=info(l),temp=await temperature(l),vol=volume(l);
-
-    ctx.fillStyle='#fff';ctx.font='900 64px Arial,sans-serif';ctx.fillText('MEU TREINO',60,145);
-    ctx.fillStyle='#d5dde4';ctx.font='700 25px Arial,sans-serif';ctx.fillText('MUSCULAÇÃO  •  PROGRESSÃO',63,187);
-    ctx.fillStyle='#fff';ctx.font='900 55px Arial,sans-serif';ctx.fillText(i.title,60,330);
-    ctx.fillStyle='#f26f00';ctx.font='900 31px Arial,sans-serif';ctx.fillText(i.day.toUpperCase(),62,378);
-    ctx.fillStyle='#fff';ctx.font='700 27px Arial,sans-serif';ctx.fillText(i.date,62,421);
-
-    const gap=22,x=50,w=980,h=180;
-    metric(ctx,x,505,w,h,'⏱','TEMPO DE TREINO',time(l.duration));
-    metric(ctx,x,707,w,h,'🔥','CALORIAS GASTAS',calories(l));
-    metric(ctx,x,909,w,h,'🚴','TEMPO DE CARDIO',cardio(l?.cardio?.duration));
-    metric(ctx,x,1111,w,h,'🏋️','PESO LEVANTADO',vol?Math.round(vol).toLocaleString('pt-BR')+' kg':'—');
-    metric(ctx,x,1313,w,h,'🌡','TEMPERATURA',temp);
-
-    ctx.fillStyle='rgba(0,0,0,.56)';rounded(ctx,50,1545,980,150,24);
-    ctx.fillStyle='#fff';ctx.font='800 24px Arial,sans-serif';ctx.fillText('TREINO REGISTRADO NO HISTÓRICO',82,1595);
-    ctx.fillStyle='#d5dde4';ctx.font='600 22px Arial,sans-serif';ctx.fillText('Dados calculados automaticamente pelo Meu Treino',82,1635);
-    ctx.fillStyle='#f26f00';ctx.fillRect(60,1780,330,6);
-    ctx.fillStyle='#fff';ctx.font='800 25px Arial,sans-serif';ctx.fillText('MEU TREINO  •  PROGRESSÃO',60,1835);
-    ctx.fillStyle='#d5dde4';ctx.font='600 20px Arial,sans-serif';ctx.fillText('#MEUTREINO  #TREINO  #DISCIPLINA',60,1875);
-    return c;
-  }
-
   function findLogByDate(date){
-    const entries=Object.entries(window.data?.logs||{}).filter(([,l])=>l?.date===date);
+    const d=appData();
+    if(!date||!d?.logs)return null;
+    const entries=Object.entries(d.logs).filter(([,l])=>l?.date===date);
     entries.sort((a,b)=>String(b[1]?.updated_at||'').localeCompare(String(a[1]?.updated_at||'')));
     return entries[0]||null;
   }
+  async function openStory(k){const d=appData(),l=d?.logs?.[k];if(!l){alert('Treino não encontrado para a data selecionada.');return}const canvas=await make(l);canvas.toBlob(async blob=>{if(!blob){alert('Não foi possível gerar o Story.');return}const file=new File([blob],'meu-treino-story-'+l.date+'.png',{type:'image/png'}),url=URL.createObjectURL(blob);document.getElementById('realStoryModal')?.remove();const m=document.createElement('div');m.id='realStoryModal';m.style.cssText='position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;box-sizing:border-box';m.innerHTML='<img src="'+url+'" style="max-width:92vw;max-height:78vh;object-fit:contain;border-radius:14px;box-shadow:0 15px 60px rgba(0,0,0,.7)"><div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;justify-content:center"><button id="realShare" style="background:#f26f00;color:#fff;border:0;border-radius:12px;padding:13px 20px;font-size:16px;font-weight:800">📲 Compartilhar</button><button id="realSave" style="background:#fff;color:#182331;border:0;border-radius:12px;padding:13px 20px;font-size:16px;font-weight:800">Salvar imagem</button><button id="realClose" style="background:#333;color:#fff;border:0;border-radius:12px;padding:13px 20px;font-size:16px;font-weight:800">Fechar</button></div>';document.body.appendChild(m);m.querySelector('#realClose').onclick=()=>{URL.revokeObjectURL(url);m.remove()};m.querySelector('#realSave').onclick=()=>{const a=document.createElement('a');a.href=url;a.download=file.name;a.click()};m.querySelector('#realShare').onclick=async()=>{try{if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({title:'Meu Treino',text:'Meu treino 💪',files:[file]});return}}catch(e){if(e?.name==='AbortError')return}m.querySelector('#realSave').click()};},'image/png')}
+  async function generate(){const date=selectedDate();if(!date){alert('Selecione uma data do treino.');return}const found=findLogByDate(date);if(!found){alert('Não há treino salvo para a data escolhida: '+date.split('-').reverse().join('/')+'.');return}await openStory(found[0])}
 
-  function selectedDate(){return document.getElementById('reportStoryDate')?.value||document.getElementById('periodReportDate')?.value||today()}
-
-  async function openStory(k){
-    const l=window.data?.logs?.[k];if(!l){alert('Treino não encontrado no Histórico.');return}
-    const canvas=await make(l);
-    canvas.toBlob(async blob=>{
-      if(!blob){alert('Não foi possível gerar o Story.');return}
-      const file=new File([blob],'meu-treino-story-'+(l.date||'treino')+'.png',{type:'image/png'});
-      const url=URL.createObjectURL(blob);
-      const old=document.getElementById('realStoryModal');if(old)old.remove();
-      const m=document.createElement('div');m.id='realStoryModal';m.style.cssText='position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;box-sizing:border-box';
-      m.innerHTML='<img src="'+url+'" style="max-width:92vw;max-height:78vh;object-fit:contain;border-radius:14px;box-shadow:0 15px 60px rgba(0,0,0,.7)"><div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;justify-content:center"><button id="realShare" style="background:#f26f00;color:#fff;border:0;border-radius:12px;padding:13px 20px;font-size:16px;font-weight:800">📲 Compartilhar</button><button id="realSave" style="background:#fff;color:#182331;border:0;border-radius:12px;padding:13px 20px;font-size:16px;font-weight:800">Salvar imagem</button><button id="realClose" style="background:#333;color:#fff;border:0;border-radius:12px;padding:13px 20px;font-size:16px;font-weight:800">Fechar</button></div>';
-      document.body.appendChild(m);
-      m.querySelector('#realClose').onclick=()=>{URL.revokeObjectURL(url);m.remove()};
-      m.querySelector('#realSave').onclick=()=>{const a=document.createElement('a');a.href=url;a.download=file.name;a.click()};
-      m.querySelector('#realShare').onclick=async()=>{try{if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({title:'Meu Treino',text:'Meu treino 💪',files:[file]});return}}catch(e){if(e?.name==='AbortError')return}m.querySelector('#realSave').click()};
-    },'image/png');
-  }
-
-  async function generate(){const k=findLogByDate(selectedDate());if(!k){alert('Não há treino salvo para a data escolhida.');return}await openStory(k[0])}
-
-  // Sobrescreve as funções globais para qualquer chamada direta.
-  window.generateStory=generate;
-  window.postWorkoutInstagram=openStory;
-  window.generateStoryForLog=openStory;
-  window.realInstagramStory=generate;
-
-  // Intercepta qualquer botão antigo de Story/Instagram antes dos handlers antigos.
-  document.addEventListener('click',function(e){
-    const b=e.target?.closest?.('button');if(!b)return;
-    const t=(b.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
-    if(t.includes('instagram')||t.includes('story instagram')||t.includes('post para instagram')||t.includes('postar no instagram')){
-      e.preventDefault();e.stopImmediatePropagation();
-      const row=b.closest('.historyrow');
-      if(row){
-        const head=row.querySelector('.historyhead b');const m=(head?.textContent||'').match(/^(.+?)\s+—\s+(\d{2})\/(\d{2})\/(\d{4})$/);
-        if(m){openStory(m[1].trim()+'|'+m[4]+'-'+m[3]+'-'+m[2]);return}
-      }
-      generate();
-    }
-  },true);
-
-  // Marca visualmente os botões antigos, sem criar um segundo gerador.
-  function patchButtons(){
-    document.querySelectorAll('button').forEach(b=>{
-      const t=(b.textContent||'').toLowerCase();
-      if(t.includes('instagram')||t.includes('story')){b.textContent='📸 Post para Instagram';b.dataset.realStory='1'}
-    });
-  }
-  setInterval(patchButtons,700);
-  setTimeout(patchButtons,300);
+  window.generateStory=generate;window.realInstagramStory=generate;window.generateStoryForLog=openStory;window.postWorkoutInstagram=openStory;
+  document.addEventListener('click',function(e){const b=e.target?.closest?.('button');if(!b)return;const t=(b.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();if(t.includes('instagram')||t.includes('story instagram')||t.includes('post para instagram')||t.includes('postar no instagram')){e.preventDefault();e.stopImmediatePropagation();const row=b.closest('.historyrow');if(row){const head=row.querySelector('.historyhead b');const m=(head?.textContent||'').match(/—\s*(\d{2})\/(\d{2})\/(\d{4})$/);if(m){openStory((typeof data!=='undefined'&&data.logs)?Object.keys(data.logs).find(k=>data.logs[k]?.date===m[3]+'-'+m[2]+'-'+m[1]):null);return}}generate()}},true);
 })();
