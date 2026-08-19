@@ -1,11 +1,5 @@
-/* UX FIX 2026-08-19 v2
-   - Clear all kg/reps for current workout
-   - Explicit next-field button (Enter equivalent)
-   - Rest-end haptic where supported + visual/audio fallback
-*/
+/* UX FIX 2026-08-19 v3 */
 (function(){
-  const VERSION='20260819ux2';
-
   function currentKey(){ return window.current || document.querySelector('[data-day-key]')?.dataset.dayKey || null; }
 
   function clearWorkoutInputs(k){
@@ -14,7 +8,6 @@
     if(!confirm('Zerar todas as cargas e repetições deste treino?')) return;
     if(Array.isArray(l.kg)) l.kg=l.kg.map(()=>[]);
     if(Array.isArray(l.reps)) l.reps=l.reps.map(()=>[]);
-    // Also clear alternate per-exercise series structures if present.
     if(Array.isArray(l.sets)) l.sets=l.sets.map(ex=>Array.isArray(ex)?ex.map(s=>({...s,kg:'',reps:''})):ex);
     l.completed=false;
     if(typeof window.save==='function') window.save(k);
@@ -29,86 +22,71 @@
     const b=document.createElement('button');
     b.className='clear-workout-btn';
     b.type='button';
-    b.textContent='🗑️ Zerar cargas e reps';
-    b.style.cssText='margin-top:12px;border:0;border-radius:12px;padding:10px 14px;font-weight:800;background:#fff0f0;color:#b42318;font-size:14px;cursor:pointer';
+    b.textContent='Zerar';
+    b.title='Zerar todas as cargas e repetições';
+    b.style.cssText='margin-top:12px;border:0;border-radius:12px;padding:10px 18px;font-weight:800;background:#fff0f0;color:#b42318;font-size:15px;cursor:pointer';
     b.onclick=()=>clearWorkoutInputs(k);
     const inner=card.querySelector('div');
     (inner||card).appendChild(b);
   }
 
-  function nextInput(el){
-    const fields=[...document.querySelectorAll('input')].filter(x=>!x.disabled && x.offsetParent!==null);
-    const idx=fields.indexOf(el);
-    const next=fields[idx+1];
-    if(next){next.focus(); if(next.select) next.select();}
-  }
-  window.nextWorkoutInput=nextInput;
-
-  function addEnterButtons(){
-    // Native iOS numeric keyboard cannot have its backspace key replaced by a webpage.
-    // Provide a visible Enter-equivalent beside each kg/reps pair, while preserving backspace.
-    document.querySelectorAll('input').forEach((input)=>{
-      if(input.dataset.enterPatched) return;
-      const ph=(input.getAttribute('placeholder')||'').toLowerCase();
-      if(ph!=='kg' && ph!=='reps') return;
-      input.dataset.enterPatched='1';
-      input.addEventListener('keydown',(e)=>{
-        if(e.key==='Enter'){e.preventDefault();nextInput(input);}
-      });
-      const wrap=input.parentElement;
-      if(!wrap || wrap.querySelector('.enter-next-btn')) return;
-      const b=document.createElement('button');
-      b.type='button'; b.className='enter-next-btn'; b.textContent='↵'; b.title='Próximo campo';
-      b.style.cssText='position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;border-radius:9px;background:#eef5ff;color:#1261a0;font-size:18px;font-weight:900;width:34px;height:34px;z-index:2';
-      const pos=getComputedStyle(wrap).position; if(pos==='static') wrap.style.position='relative';
-      wrap.appendChild(b);
-      input.style.paddingRight='48px';
-      b.onclick=()=>nextInput(input);
+  // Remove any previously injected Enter-equivalent buttons.
+  function removeEnterButtons(){
+    document.querySelectorAll('.enter-next-btn').forEach(b=>b.remove());
+    document.querySelectorAll('input[data-enter-patched]').forEach(input=>{
+      delete input.dataset.enterPatched;
+      input.style.paddingRight='';
     });
   }
 
-  function longHaptic(){
-    // Vibration API is not exposed by iOS Safari/WebKit. Use it where supported.
+  // iOS Safari/WebKit does not expose navigator.vibrate for web pages.
+  // Keep the vibration attempt for supported browsers, but provide a reliable
+  // visual + audio signal on iPhone instead of pretending haptic is available.
+  function restFinishedSignal(){
     try{
       if(typeof navigator.vibrate==='function'){
-        navigator.vibrate([180,80,180,80,400]);
-        return true;
+        navigator.vibrate([180,80,180,80,450]);
+        return;
       }
     }catch(e){}
-    // iPhone fallback: visible flash + short alert tone when Web Audio is available.
     try{
       const el=document.createElement('div');
       el.textContent='⏱️ DESCANSO FINALIZADO';
       el.style.cssText='position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.82);font-size:28px;font-weight:900;color:#c2410c;text-align:center;pointer-events:none';
       document.body.appendChild(el); setTimeout(()=>el.remove(),900);
       const C=window.AudioContext||window.webkitAudioContext;
-      if(C){const c=new C(); const o=c.createOscillator(); const g=c.createGain(); o.frequency.value=880; g.gain.value=.18; o.connect(g);g.connect(c.destination);o.start();setTimeout(()=>{o.stop();c.close&&c.close()},500)}
+      if(C){
+        const c=new C();
+        const now=c.currentTime;
+        [0,0.22,0.44].forEach(t=>{
+          const o=c.createOscillator(),g=c.createGain();
+          o.frequency.value=880; g.gain.setValueAtTime(.18,now+t); g.gain.exponentialRampToValueAtTime(.001,now+t+.16);
+          o.connect(g);g.connect(c.destination);o.start(now+t);o.stop(now+t+.17);
+        });
+        setTimeout(()=>c.close&&c.close(),900);
+      }
     }catch(e){}
-    return false;
   }
-  window.longRestHaptic=longHaptic;
+  window.longRestHaptic=restFinishedSignal;
 
-  function patchRestFinish(){
-    if(window.__uxRestPatched) return;
-    window.__uxRestPatched=true;
-    const original=window.toggleRest;
-    if(typeof original!=='function'){window.__uxRestPatched=false;return;}
-    // Patch only via interval completion watcher so existing timer logic remains intact.
-    setInterval(()=>{
-      const intervals=window.restIntervals||{};
-      Object.keys(intervals).forEach(i=>{
-        const box=document.getElementById('rest-'+i);
-        if(box && box.classList.contains('done') && !box.dataset.hapticDone){
-          box.dataset.hapticDone='1'; longHaptic();
-        }
-        if(box && !box.classList.contains('done')) delete box.dataset.hapticDone;
-      });
-    },250);
+  function watchRest(){
+    document.querySelectorAll('.restbox').forEach(box=>{
+      if(box.classList.contains('done') && box.dataset.signalDone!=='1'){
+        box.dataset.signalDone='1';
+        restFinishedSignal();
+      }else if(!box.classList.contains('done')){
+        delete box.dataset.signalDone;
+      }
+    });
   }
 
   function observe(){
-    addClearButton(); addEnterButtons(); patchRestFinish();
+    addClearButton();
+    removeEnterButtons();
+    watchRest();
   }
-  const mo=new MutationObserver(observe); mo.observe(document.documentElement,{childList:true,subtree:true});
+  const mo=new MutationObserver(observe);
+  mo.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  setInterval(watchRest,250);
   setTimeout(observe,100); setTimeout(observe,500); setTimeout(observe,1200);
 })();
