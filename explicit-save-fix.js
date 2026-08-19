@@ -14,11 +14,9 @@
     Object.entries(data?.logs||{}).forEach(([k,l])=>{
       if(!l?.date)return;
       if(l.saved===undefined){
-        // Registros antigos reais permanecem no histórico; o dia atual precisa de clique explícito.
         l.saved = l.date < today && hasRealData(l);
         changed=true;
       }
-      // Remove registros vazios que nunca poderiam ser um treino salvo.
       if(l.saved===false && !hasRealData(l) && l.date===today){
         delete data.logs[k]; changed=true;
         if(user&&sb)sb.from('workout_logs').delete().eq('user_id',user.id).eq('log_key',CLOUD_PREFIX+k).catch(()=>{});
@@ -27,9 +25,6 @@
     if(changed)try{localSave()}catch(e){}
   }
   migrate();
-
-  // O autosave continua existindo para não perder o rascunho, mas o botão explícito
-  // é o único caminho que marca o treino como concluído/salvo no histórico.
   const originalSave=window.save;
   window.save=function(k){
     if(typeof originalSave==='function')originalSave(k);
@@ -39,8 +34,8 @@
     try{localSave();}catch(e){}
     try{queueSave(k);}catch(e){}
   };
-
   function hideDraftHistory(){
+    migrate();
     if(current!=='Histórico')return;
     document.querySelectorAll('.historyrow').forEach(row=>{
       const btn=row.querySelector('button[onclick*="deleteLog"]');
@@ -54,6 +49,6 @@
   }
   const previousRender=window.render;
   if(previousRender){
-    window.render=function(){const out=previousRender.apply(this,arguments);setTimeout(hideDraftHistory,0);return out};
+    window.render=function(){migrate();const out=previousRender.apply(this,arguments);setTimeout(hideDraftHistory,0);return out};
   }
 })();
