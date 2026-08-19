@@ -1,14 +1,12 @@
-/* STORY REAL — seleção corrigida
+/* STORY REAL — seleção corrigida + compatibilidade storyDate2
    O Story usa EXATAMENTE a data escolhida no campo do Histórico/Relatórios.
-   A fonte dos registros é a mesma variável global lexical `data` usada pelo app.
 */
 (function(){
   const W=1080,H=1920;
-  const BG='story-bg.jpg?v=20260819storybg5';
+  const BG='story-bg.jpg?v=20260819storybg6';
   const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
   const n=v=>{const x=Number(String(v??'').replace(',','.'));return Number.isFinite(x)?x:0};
-  const appData=()=>{try{if(typeof data!=='undefined'&&data&&data.logs)return data}catch(e){}return window.data&&window.data.logs?window.data:null};
-
+  const appData=()=>{try{if(typeof data!=='undefined'&&data&&data.logs)return data}catch(e){}return window.data&&window.data.logs?window.data:{logs:{}}};
   function time(v){if(v==null||String(v).trim()==='')return '—';const s=String(v).trim();if(/^\d+:\d{1,2}$/.test(s))return s;if(/^\d+:\d{1,2}:\d{1,2}$/.test(s)){const p=s.split(':');return p[0]+':'+String(p[1]).padStart(2,'0')}const x=n(s);return x?Math.floor(x/60)+':'+String(Math.round(x%60)).padStart(2,'0'):'—'}
   function cardio(v){if(v==null||String(v).trim()==='')return '—';const s=String(v).trim().toLowerCase().replace(',','.');const c=s.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);if(c)return c[1]+':'+String(c[2]).padStart(2,'0');const h=s.match(/(\d+(?:\.\d+)?)\s*h/),m=s.match(/(\d+(?:\.\d+)?)\s*(?:min|m)\b/);if(h||m){const mins=Math.round((h?n(h[1])*60:0)+(m?n(m[1]):0));return Math.floor(mins/60)+':'+String(mins%60).padStart(2,'0')}const x=n(s);return x?Math.floor(x/60)+':'+String(Math.round(x%60)).padStart(2,'0'):'—'}
   function volume(l){let total=0;Object.values(l?.rows||{}).forEach(r=>{for(let s=0;s<50;s++){const kg=n(r?.['kg'+s]),reps=n(r?.['reps'+s]);if(kg>0&&reps>0)total+=kg*reps}});return total}
@@ -22,24 +20,13 @@
   async function make(l){const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');const bg=await img(BG);cover(ctx,bg);const i=info(l),temp=await temperature(l),vol=volume(l);ctx.fillStyle='#fff';ctx.font='900 64px Arial,sans-serif';ctx.fillText('MEU TREINO',60,145);ctx.fillStyle='#d5dde4';ctx.font='700 25px Arial,sans-serif';ctx.fillText('MUSCULAÇÃO  •  PROGRESSÃO',63,187);ctx.fillStyle='#fff';ctx.font='900 55px Arial,sans-serif';ctx.fillText(i.title,60,330);ctx.fillStyle='#f26f00';ctx.font='900 31px Arial,sans-serif';ctx.fillText(i.day.toUpperCase(),62,378);ctx.fillStyle='#fff';ctx.font='700 27px Arial,sans-serif';ctx.fillText(i.date,62,421);const x=50,w=980,h=180;metric(ctx,x,505,w,h,'⏱','TEMPO DE TREINO',time(l.duration));metric(ctx,x,707,w,h,'🔥','CALORIAS GASTAS',calories(l));metric(ctx,x,909,w,h,'🚴','TEMPO DE CARDIO',cardio(l?.cardio?.duration));metric(ctx,x,1111,w,h,'🏋️','PESO LEVANTADO',vol?Math.round(vol).toLocaleString('pt-BR')+' kg':'—');metric(ctx,x,1313,w,h,'🌡','TEMPERATURA',temp);ctx.fillStyle='rgba(0,0,0,.56)';rounded(ctx,50,1545,980,150,24);ctx.fillStyle='#fff';ctx.font='800 24px Arial,sans-serif';ctx.fillText('TREINO REGISTRADO NO HISTÓRICO',82,1595);ctx.fillStyle='#d5dde4';ctx.font='600 22px Arial,sans-serif';ctx.fillText('Dados calculados automaticamente pelo Meu Treino',82,1635);ctx.fillStyle='#f26f00';ctx.fillRect(60,1780,330,6);ctx.fillStyle='#fff';ctx.font='800 25px Arial,sans-serif';ctx.fillText('MEU TREINO  •  PROGRESSÃO',60,1835);ctx.fillStyle='#d5dde4';ctx.font='600 20px Arial,sans-serif';ctx.fillText('#MEUTREINO  #TREINO  #DISCIPLINA',60,1875);return c}
 
   function selectedDate(){
-    // reportStoryDate é o seletor específico do Story. Nunca usar a data de hoje
-    // como fallback quando existe um seletor na tela.
-    const el=document.getElementById('reportStoryDate');
-    if(el&&el.value)return el.value;
-    const period=document.getElementById('periodReportDate');
-    if(period&&period.value)return period.value;
+    const ids=['storyDate2','reportStoryDate','periodReportDate'];
+    for(const id of ids){const el=document.getElementById(id);if(el?.value)return String(el.value).slice(0,10)}
     return null;
   }
-  function findLogByDate(date){
-    const d=appData();
-    if(!date||!d?.logs)return null;
-    const entries=Object.entries(d.logs).filter(([,l])=>l?.date===date);
-    entries.sort((a,b)=>String(b[1]?.updated_at||'').localeCompare(String(a[1]?.updated_at||'')));
-    return entries[0]||null;
-  }
+  function findLogByDate(date){const d=appData();if(!date||!d?.logs)return null;const entries=Object.entries(d.logs).filter(([,l])=>l?.date===date);entries.sort((a,b)=>String(b[1]?.updated_at||'').localeCompare(String(a[1]?.updated_at||'')));return entries[0]||null}
   async function openStory(k){const d=appData(),l=d?.logs?.[k];if(!l){alert('Treino não encontrado para a data selecionada.');return}const canvas=await make(l);canvas.toBlob(async blob=>{if(!blob){alert('Não foi possível gerar o Story.');return}const file=new File([blob],'meu-treino-story-'+l.date+'.png',{type:'image/png'}),url=URL.createObjectURL(blob);document.getElementById('realStoryModal')?.remove();const m=document.createElement('div');m.id='realStoryModal';m.style.cssText='position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;box-sizing:border-box';m.innerHTML='<img src="'+url+'" style="max-width:92vw;max-height:78vh;object-fit:contain;border-radius:14px;box-shadow:0 15px 60px rgba(0,0,0,.7)"><div style="display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;justify-content:center"><button id="realShare" style="background:#f26f00;color:#fff;border:0;border-radius:12px;padding:13px 20px;font-size:16px;font-weight:800">📲 Compartilhar</button><button id="realSave" style="background:#fff;color:#182331;border:0;border-radius:12px;padding:13px 20px;font-size:16px;font-weight:800">Salvar imagem</button><button id="realClose" style="background:#333;color:#fff;border:0;border-radius:12px;padding:13px 20px;font-size:16px;font-weight:800">Fechar</button></div>';document.body.appendChild(m);m.querySelector('#realClose').onclick=()=>{URL.revokeObjectURL(url);m.remove()};m.querySelector('#realSave').onclick=()=>{const a=document.createElement('a');a.href=url;a.download=file.name;a.click()};m.querySelector('#realShare').onclick=async()=>{try{if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({title:'Meu Treino',text:'Meu treino 💪',files:[file]});return}}catch(e){if(e?.name==='AbortError')return}m.querySelector('#realSave').click()};},'image/png')}
   async function generate(){const date=selectedDate();if(!date){alert('Selecione uma data do treino.');return}const found=findLogByDate(date);if(!found){alert('Não há treino salvo para a data escolhida: '+date.split('-').reverse().join('/')+'.');return}await openStory(found[0])}
-
   window.generateStory=generate;window.realInstagramStory=generate;window.generateStoryForLog=openStory;window.postWorkoutInstagram=openStory;
   document.addEventListener('click',function(e){const b=e.target?.closest?.('button');if(!b)return;const t=(b.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();if(t.includes('instagram')||t.includes('story instagram')||t.includes('post para instagram')||t.includes('postar no instagram')){e.preventDefault();e.stopImmediatePropagation();const row=b.closest('.historyrow');if(row){const head=row.querySelector('.historyhead b');const m=(head?.textContent||'').match(/—\s*(\d{2})\/(\d{2})\/(\d{4})$/);if(m){openStory((typeof data!=='undefined'&&data.logs)?Object.keys(data.logs).find(k=>data.logs[k]?.date===m[3]+'-'+m[2]+'-'+m[1]):null);return}}generate()}},true);
 })();
