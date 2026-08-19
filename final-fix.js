@@ -1,4 +1,4 @@
-/* FINAL FIX 2026-08-19 v3 */
+/* FINAL FIX 2026-08-19 v4 */
 (function(){
   const originalSetVal=window.setVal;
   if(typeof originalSetVal==='function'){
@@ -28,7 +28,6 @@
     };
   }
 
-  // Direct access to the global lexical workout configuration.
   try{
     const w=eval('workouts');
     if(w?.Quarta?.ex){
@@ -73,5 +72,38 @@
   }
   const observer=new MutationObserver(patchSaveButton);observer.observe(document.documentElement,{childList:true,subtree:true});
   patchSaveButton();setTimeout(patchSaveButton,500);
+
+  // Desativa completamente o avanço automático entre kg/repetições/séries.
+  window.advanceField=function(){};
+
+  // Vibração longa opcional ao terminar o descanso.
+  const VIB_KEY='meu_treino_vibracao_descanso';
+  const vibrationOn=()=>localStorage.getItem(VIB_KEY)==='1';
+  const vibrateLong=()=>{if(vibrationOn()&&typeof navigator!=='undefined'&&typeof navigator.vibrate==='function'){try{navigator.vibrate(900)}catch(e){}}};
+  const restSeen=new WeakSet();
+  function watchRest(){
+    document.querySelectorAll('.restbox').forEach(box=>{
+      const done=box.classList.contains('done');
+      if(done&&!restSeen.has(box)){restSeen.add(box);vibrateLong()}
+      else if(!done&&restSeen.has(box))restSeen.delete(box);
+    });
+  }
+
+  function addVibrationSetting(){
+    if(typeof current==='undefined'||current!=='Dados')return;
+    const app=document.getElementById('app');
+    if(!app||app.querySelector('#vibration-setting'))return;
+    const card=document.createElement('div');
+    card.id='vibration-setting';
+    card.style.cssText='margin:16px 0;padding:18px 20px;border-radius:18px;background:#fff;border:1px solid #e5e7eb;box-shadow:0 4px 16px rgba(0,0,0,.05)';
+    const supported=typeof navigator!=='undefined'&&typeof navigator.vibrate==='function';
+    card.innerHTML='<div style="font-weight:800;font-size:18px;margin-bottom:6px">📳 Vibração ao terminar descanso</div><div style="font-size:14px;color:#6b7280;margin-bottom:12px">Vibração longa de 0,9 segundo quando o cronômetro de descanso chegar a zero.</div><label style="display:flex;align-items:center;gap:12px;font-size:16px;font-weight:700;cursor:pointer"><input id="vibration-toggle" type="checkbox" '+(vibrationOn()?'checked':'')+' style="width:22px;height:22px"> Ativar vibração</label><div style="margin-top:9px;font-size:13px;color:'+(supported?'#6b7280':'#b45309')+'">'+(supported?'Seu navegador informa suporte à vibração.':'Este navegador pode não permitir vibração em páginas web; a opção ficará salva para quando houver suporte.')+'</div>';
+    app.prepend(card);
+    card.querySelector('#vibration-toggle').addEventListener('change',e=>localStorage.setItem(VIB_KEY,e.target.checked?'1':'0'));
+  }
+  const restObserver=new MutationObserver(()=>{watchRest();addVibrationSetting()});
+  restObserver.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+  setInterval(()=>{watchRest();addVibrationSetting()},700);
+  setTimeout(()=>{watchRest();addVibrationSetting()},500);
   setTimeout(function(){if(typeof window.render==='function')window.render()},100);
 })();
