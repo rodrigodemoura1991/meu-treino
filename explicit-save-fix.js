@@ -68,7 +68,7 @@
     document.querySelectorAll('.historyrow').forEach(row=>{
       const btn=row.querySelector('button[onclick*="deleteLog"]');
       const m=btn?.getAttribute('onclick')?.match(/deleteLog\('([^']+)'\)/);
-      if(m&&data.logs[m[1]]?.explicitSaved!==true)row.remove();
+      if(m&&data.logs[m[1]]?.date===today()&&data.logs[m[1]]?.explicitSaved!==true)row.remove();
     });
     const card=document.querySelector('.card .historyrow')?.closest('.card');
     if(card&&!card.querySelector('.historyrow'))card.innerHTML='<div class="emptyicon">📈</div><h2>Nenhum treino salvo</h2><p>Use “Salvar treino” para colocar o treino no histórico.</p>';
