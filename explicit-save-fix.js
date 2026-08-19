@@ -1,54 +1,62 @@
-/* Regra de histórico: só entra após o botão "Salvar treino". */
+/* Histórico: rascunho não entra. Só o botão Salvar treino conclui o registro. */
 (function(){
   const todayIso=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-  function hasRealData(l){
-    if(!l)return false;
-    if([l.notes,l.duration,l.avgBpm,l.calories,l.effort].some(v=>v!==''&&v!=null))return true;
-    const c=l.cardio||{};
-    if(Object.values(c).some(v=>v!==''&&v!=null))return true;
-    return Object.values(l.rows||{}).some(r=>Object.values(r||{}).some(v=>v!==''&&v!=null&&v!==false));
-  }
-  function migrate(){
-    const today=todayIso();
+  const today=todayIso();
+  const originalSave=window.save;
+  const originalWorkout=window.workout;
+  const originalRender=window.render;
+
+  function removeTodayDrafts(){
     let changed=false;
     Object.entries(data?.logs||{}).forEach(([k,l])=>{
-      if(!l?.date)return;
-      if(l.saved===undefined){
-        l.saved = l.date < today && hasRealData(l);
+      if(l?.date===today && l.explicitSaved!==true){
+        delete data.logs[k];
         changed=true;
-      }
-      if(l.saved===false && !hasRealData(l) && l.date===today){
-        delete data.logs[k]; changed=true;
-        if(user&&sb)sb.from('workout_logs').delete().eq('user_id',user.id).eq('log_key',CLOUD_PREFIX+k).catch(()=>{});
+        if(user&&sb){
+          sb.from('workout_logs').delete().eq('user_id',user.id).eq('log_key',CLOUD_PREFIX+k).catch(()=>{});
+        }
       }
     });
     if(changed)try{localSave()}catch(e){}
   }
-  migrate();
-  const originalSave=window.save;
-  window.save=function(k){
+
+  // O autosave original continua funcionando, mas NÃO marca o treino como concluído.
+  // O registro de hoje só fica no histórico quando explicitSave() for chamado.
+  window.explicitSave=function(k){
     if(typeof originalSave==='function')originalSave(k);
     const l=data?.logs?.[k];
     if(!l)return;
+    l.explicitSaved=true;
     l.saved=true;
-    try{localSave();}catch(e){}
-    try{queueSave(k);}catch(e){}
+    try{localSave()}catch(e){}
+    try{queueSave(k)}catch(e){}
+    setTimeout(()=>{try{localSave()}catch(e){}},50);
   };
-  function hideDraftHistory(){
-    migrate();
-    if(current!=='Histórico')return;
-    document.querySelectorAll('.historyrow').forEach(row=>{
-      const btn=row.querySelector('button[onclick*="deleteLog"]');
-      const m=btn?.getAttribute('onclick')?.match(/deleteLog\('([^']+)'\)/);
-      if(m&&data.logs[m[1]]?.saved!==true)row.remove();
-    });
-    const card=document.querySelector('.card .historyrow')?.closest('.card');
-    if(card && !card.querySelector('.historyrow')){
-      card.innerHTML='<div class="emptyicon">📈</div><h2>Nenhum treino salvo</h2><p>Use “Salvar treino” para colocar o treino no histórico.</p>';
-    }
+
+  // Troca apenas o botão visível "Salvar treino"; os autosaves continuam usando save().
+  if(typeof originalWorkout==='function'){
+    window.workout=function(){
+      let html=originalWorkout.apply(this,arguments);
+      html=html.replace(/onclick="save\('([^']+)'\);alert\('Treino salvo\.'\)"/g,'onclick="explicitSave(\'$1\');alert(\'Treino salvo.\')"');
+      return html;
+    };
   }
-  const previousRender=window.render;
-  if(previousRender){
-    window.render=function(){migrate();const out=previousRender.apply(this,arguments);setTimeout(hideDraftHistory,0);return out};
+
+  // Remove imediatamente o registro de hoje que já foi criado pelas versões anteriores.
+  removeTodayDrafts();
+
+  // Depois do carregamento da nuvem, a tela é renderizada novamente; limpamos drafts antes disso.
+  if(typeof originalRender==='function'){
+    window.render=function(){
+      removeTodayDrafts();
+      return originalRender.apply(this,arguments);
+    };
   }
+
+  // Segunda limpeza após o render para casos em que a nuvem terminou de carregar de forma assíncrona.
+  setTimeout(()=>{
+    removeTodayDrafts();
+    try{if(typeof originalRender==='function')originalRender()}catch(e){}
+  },800);
+  setTimeout(()=>removeTodayDrafts(),2500);
 })();
