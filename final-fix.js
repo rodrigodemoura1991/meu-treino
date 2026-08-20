@@ -1,4 +1,4 @@
-/* FINAL FIX 2026-08-19 v4 */
+/* FINAL FIX 2026-08-20 v5 — finaliza e zera o cronômetro sem perder a duração salva. */
 (function(){
   const originalSetVal=window.setVal;
   if(typeof originalSetVal==='function'){
@@ -46,16 +46,27 @@
 
   window.finishAndSaveWorkout=async function(k){
     const l=window.data?.logs?.[k];if(!l)return;
-    if(l.timerStartedAt){
-      const elapsed=typeof window.workoutTimerState==='function'?window.workoutTimerState(l):0;
-      l.timerElapsed=elapsed;
+
+    // Captura a duração real antes de encerrar e zera somente o contador visual.
+    const hadTimer=!!l.timerStartedAt || Number(l.timerElapsed||0)>0;
+    if(hadTimer){
+      const elapsed=typeof window.workoutTimerState==='function'?window.workoutTimerState(l):Number(l.timerElapsed||0);
       l.duration=typeof window.fmtDuration==='function'?window.fmtDuration(elapsed):l.duration;
-      delete l.timerStartedAt;
-      if(window.workoutInterval){clearInterval(window.workoutInterval);window.workoutInterval=null}
     }
+    delete l.timerStartedAt;
+    l.timerElapsed=0;
     l.completed=true;
+
+    if(window.workoutInterval){clearInterval(window.workoutInterval);window.workoutInterval=null}
     if(typeof window.save==='function')await window.save(k);
     if(typeof window.render==='function')window.render();
+
+    // Garante que qualquer elemento antigo da tela também volte a zero.
+    setTimeout(()=>{
+      const clock=document.getElementById('workoutClock');
+      if(clock)clock.textContent='0:00:00';
+    },30);
+
     const el=document.createElement('div');
     el.textContent='✓ Treino salvo';
     el.style.cssText='position:fixed;top:90px;left:50%;transform:translateX(-50%);z-index:99999;background:#1f9d55;color:#fff;padding:14px 24px;border-radius:14px;font-weight:800;font-size:18px;box-shadow:0 8px 30px rgba(0,0,0,.2)';
@@ -76,7 +87,6 @@
   // Desativa completamente o avanço automático entre kg/repetições/séries.
   window.advanceField=function(){};
 
-  // Vibração longa opcional ao terminar o descanso.
   const VIB_KEY='meu_treino_vibracao_descanso';
   const vibrationOn=()=>localStorage.getItem(VIB_KEY)==='1';
   const vibrateLong=()=>{if(vibrationOn()&&typeof navigator!=='undefined'&&typeof navigator.vibrate==='function'){try{navigator.vibrate(900)}catch(e){}}};
@@ -88,7 +98,6 @@
       else if(!done&&restSeen.has(box))restSeen.delete(box);
     });
   }
-
   function addVibrationSetting(){
     if(typeof current==='undefined'||current!=='Dados')return;
     const app=document.getElementById('app');
