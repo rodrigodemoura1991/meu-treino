@@ -20,6 +20,17 @@
     .bottomnav{background:rgba(13,17,23,.98)!important;border-top-color:var(--line)!important;box-shadow:0 -8px 20px rgba(0,0,0,.3)!important}
     .bottomnav button{color:#9aa7b5!important}.bottomnav button.active{color:var(--accent)!important}
     .bar{background:var(--accent)!important}
+
+    /* Modal de edição: garantir contraste e mostrar os valores já salvos */
+    .editOverlay{background:rgba(0,0,0,.72)!important}
+    .editModal{background:#151b23!important;color:#f1f5f9!important;border:1px solid #293241!important}
+    .editTop,.editFooter{border-color:#293241!important;background:#151b23!important}
+    .editTop h2,.editEx>b,.editSection h3{color:#f1f5f9!important}
+    .editEx,.editSection{background:#111820!important;border-color:#293241!important}
+    .editEx>small,.editSet span,.editGrid label,.editNotes,.editNotes::first-line{color:#9aa7b5!important}
+    .editSet input,.editGrid input,.editGrid select,.editEx textarea,.editNotes textarea{background:#0b1118!important;color:#f8fafc!important;border-color:#3b4756!important}
+    .editSet input::placeholder,.editGrid input::placeholder,.editEx textarea::placeholder,.editNotes textarea::placeholder{color:#7f8b99!important}
+    .editSet input:focus,.editGrid input:focus,.editGrid select:focus,.editEx textarea:focus,.editNotes textarea:focus{border-color:#ff7412!important;box-shadow:0 0 0 3px rgba(255,116,18,.15)!important}
   `;
   document.head.appendChild(css);
 })();
