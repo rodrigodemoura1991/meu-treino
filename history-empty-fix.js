@@ -1,4 +1,6 @@
-/* Correção: registros vazios nunca entram no Histórico/Relatórios. */
+/* Correção: registros vazios nunca entram no Histórico/Relatórios.
+   IMPORTANTE: a limpeza local NÃO apaga registros da nuvem.
+   O histórico online é preservado conforme a sincronização append-only. */
 (function(){
   function hasRealData(l){
     if(!l) return false;
@@ -14,9 +16,8 @@
     });
     if(removed.length){
       try{ localSave(); }catch(e){}
-      if(user&&sb){
-        removed.forEach(k=>sb.from('workout_logs').delete().eq('user_id',user.id).eq('log_key',CLOUD_PREFIX+k).catch(()=>{}));
-      }
+      /* Não executar DELETE no Supabase.
+         Registros online vazios/antigos devem permanecer preservados. */
     }
     return removed.length;
   }
