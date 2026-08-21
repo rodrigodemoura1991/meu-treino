@@ -88,6 +88,7 @@
         const badge=document.createElement('span');
         badge.className=BADGE;
         badge.textContent='Última: '+String(last).replace('.',',')+' kg';
+        badge.__target=input;
         document.body.appendChild(badge);
         const update=()=>position(badge,input);
         update();
