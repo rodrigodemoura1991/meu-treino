@@ -1,4 +1,4 @@
-/* EDIT MODAL FIX — garante contraste e texto visível no iOS */
+/* EDIT MODAL FIX — contraste forte e placeholders visíveis no iOS */
 #editOverlay .editModal,
 #editOverlay .editModal *{box-sizing:border-box}
 #editOverlay .editModal{color:#18222d!important;background:#fff!important}
@@ -8,9 +8,10 @@
 #editOverlay .editEx>small,
 #editOverlay .editSet span,
 #editOverlay .editGrid label,
-#editOverlay .editNotes,
-#editOverlay .eyebrow{color:#71808f}
+#editOverlay .editNotes{color:#5f7080!important}
 #editOverlay .eyebrow{color:#b7e800!important}
+
+/* Campos: texto digitado e placeholder sempre visíveis */
 #editOverlay input,
 #editOverlay select,
 #editOverlay textarea,
@@ -18,9 +19,37 @@
 #editOverlay .editGrid input,
 #editOverlay .editGrid select,
 #editOverlay .editEx textarea,
-#editOverlay .editNotes textarea{color:#18222d!important;-webkit-text-fill-color:#18222d!important;background:#fff!important;caret-color:#18222d!important;opacity:1!important}
+#editOverlay .editNotes textarea{
+  color:#18222d!important;
+  -webkit-text-fill-color:#18222d!important;
+  background:#f8fafb!important;
+  caret-color:#18222d!important;
+  opacity:1!important;
+  font-size:16px!important;
+  line-height:1.25!important;
+  font-weight:600!important;
+}
+
 #editOverlay input::placeholder,
-#editOverlay textarea::placeholder{color:#71808f!important;-webkit-text-fill-color:#71808f!important;opacity:1!important}
+#editOverlay textarea::placeholder,
+#editOverlay .editSet input::placeholder,
+#editOverlay .editEx textarea::placeholder,
+#editOverlay .editNotes textarea::placeholder{
+  color:#526476!important;
+  -webkit-text-fill-color:#526476!important;
+  opacity:1!important;
+  visibility:visible!important;
+  font-size:16px!important;
+  font-weight:600!important;
+}
+
+#editOverlay .editSet input[type="number"]{
+  min-height:52px!important;
+  text-align:center!important;
+}
+#editOverlay .editSet input[type="number"]::placeholder{text-transform:uppercase!important}
+#editOverlay .editEx textarea,
+#editOverlay .editNotes textarea{font-weight:500!important}
 #editOverlay option{color:#18222d!important;background:#fff!important}
 #editOverlay .editTop .secondary{color:#fff!important;background:#292d2d!important}
 #editOverlay .editFooter .secondary{color:#354252!important;background:#edf1f4!important}
