@@ -1,0 +1,27 @@
+/* EDIT MODAL FIX — garante contraste e texto visível no iOS */
+#editOverlay .editModal,
+#editOverlay .editModal *{box-sizing:border-box}
+#editOverlay .editModal{color:#18222d!important;background:#fff!important}
+#editOverlay .editTop h2,
+#editOverlay .editEx>b,
+#editOverlay .editSection h3{color:#18222d!important}
+#editOverlay .editEx>small,
+#editOverlay .editSet span,
+#editOverlay .editGrid label,
+#editOverlay .editNotes,
+#editOverlay .eyebrow{color:#71808f}
+#editOverlay .eyebrow{color:#b7e800!important}
+#editOverlay input,
+#editOverlay select,
+#editOverlay textarea,
+#editOverlay .editSet input,
+#editOverlay .editGrid input,
+#editOverlay .editGrid select,
+#editOverlay .editEx textarea,
+#editOverlay .editNotes textarea{color:#18222d!important;-webkit-text-fill-color:#18222d!important;background:#fff!important;caret-color:#18222d!important;opacity:1!important}
+#editOverlay input::placeholder,
+#editOverlay textarea::placeholder{color:#71808f!important;-webkit-text-fill-color:#71808f!important;opacity:1!important}
+#editOverlay option{color:#18222d!important;background:#fff!important}
+#editOverlay .editTop .secondary{color:#fff!important;background:#292d2d!important}
+#editOverlay .editFooter .secondary{color:#354252!important;background:#edf1f4!important}
+#editOverlay .editFooter .primary{color:#101200!important;background:#c7f21d!important}
