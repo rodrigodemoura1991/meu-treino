@@ -28,6 +28,20 @@
     });
   }
 
+  function fixDateLabels(){
+    if(typeof current==='undefined' || current!=='Histórico') return;
+    const logs=Object.values(data?.logs||{}).filter(l=>l&&l.date).sort((a,b)=>b.date.localeCompare(a.date));
+    const names=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+    document.querySelectorAll('.historyrow').forEach((row,i)=>{
+      const l=logs[i];
+      const title=row.querySelector('.historyhead b');
+      if(!l||!title) return;
+      const d=new Date(l.date+'T12:00:00');
+      if(Number.isNaN(d.getTime())) return;
+      title.textContent=names[d.getDay()]+' — '+d.toLocaleDateString('pt-BR');
+    });
+  }
+
   function compactActions(){
     if(typeof current==='undefined' || current!=='Histórico') return;
     document.querySelectorAll('.historyActions .smallbtn').forEach(btn=>{
@@ -48,6 +62,7 @@
   function apply(){
     removeInstagram();
     addVolume();
+    fixDateLabels();
     compactActions();
   }
 
