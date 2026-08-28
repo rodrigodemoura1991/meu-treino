@@ -1,7 +1,6 @@
-/* MEU TREINO — REST TIMER FINAL UI 2026-08-28 v2 */
+/* MEU TREINO — REST TIMER FINAL UI 2026-08-28 v3 */
 (()=>{
   'use strict';
-
   const active=new WeakMap();
   let toastTimer=0;
   const clean=s=>String(s??'').replace(/\s+/g,' ').trim();
@@ -10,7 +9,6 @@
     const hay=[el.name,el.id,el.placeholder,el.getAttribute('aria-label'),el.dataset?.field].filter(Boolean).join(' ').toLowerCase();
     return /(^|[^a-z])reps?([^a-z]|$)|repeti/.test(hay);
   };
-
   function findCard(input){
     let el=input;
     for(let n=0;el&&n<40;n++,el=el.parentElement){
@@ -29,7 +27,6 @@
     const m=clean(card.textContent).match(/DESCANSO\s*(\d+)\s*:\s*(\d{2})/i);
     return m?(+m[1])*60+(+m[2]):60;
   }
-
   function injectStyle(){
     if(document.getElementById('meu-rest-final-style'))return;
     const s=document.createElement('style');s.id='meu-rest-final-style';
@@ -52,22 +49,15 @@
     `;
     document.head.appendChild(s);
   }
-
   function hideLegacy(card){
-    [...card.querySelectorAll('button,[role="button"]')].forEach(btn=>{
+    // Hide ONLY the original small rest control. Never hide the exercise header,
+    // because that contains the exercise image and name.
+    card.querySelectorAll('.restbox').forEach(el=>el.classList.add('meu-rest-legacy-hidden'));
+    card.querySelectorAll('button,[role="button"]').forEach(btn=>{
       const txt=clean(btn.textContent)+' '+clean(btn.getAttribute('aria-label'));
-      if(/[▶▷⏵]/.test(txt)||/descanso/i.test(txt)){
-        let p=btn.parentElement;
-        if(p && /DESCANSO/i.test(clean(p.textContent)))p.classList.add('meu-rest-legacy-hidden');
-        else btn.classList.add('meu-rest-legacy-hidden');
-      }
-    });
-    [...card.children].forEach(ch=>{
-      if(ch.classList.contains('meu-rest-panel'))return;
-      if(/DESCANSO\s*\d+\s*:\s*\d{2}/i.test(clean(ch.textContent))&&!ch.querySelector('input'))ch.classList.add('meu-rest-legacy-hidden');
+      if(/[▶▷⏵]/.test(txt)||/descanso/i.test(txt))btn.classList.add('meu-rest-legacy-hidden');
     });
   }
-
   function ensurePanel(card){
     if(!card)return null;
     let p=card.querySelector('.meu-rest-panel');
@@ -76,26 +66,19 @@
     p.innerHTML='<div class="meu-rest-left"><div class="meu-rest-ring"><span class="meu-rest-clock">⏱</span></div><div><div class="meu-rest-label">DESCANSO</div><div class="meu-rest-name"></div><div class="meu-rest-hint">Começa automaticamente ao informar as repetições</div></div></div><div class="meu-rest-right"><div class="meu-rest-big">0:00</div><div class="meu-rest-total">tempo de descanso</div></div>';
     const sets=card.querySelector('.sets');
     if(sets)sets.parentNode.insertBefore(p,sets);
-    else{
-      const firstInputs=card.querySelector('input');
-      if(firstInputs)firstInputs.parentNode.parentNode.insertBefore(p,firstInputs.parentNode.parentNode.firstChild);
-      else card.appendChild(p);
-    }
+    else{const firstInputs=card.querySelector('input');if(firstInputs)firstInputs.parentNode.parentNode.insertBefore(p,firstInputs.parentNode.parentNode.firstChild);else card.appendChild(p)}
     p.querySelector('.meu-rest-name').textContent=nameOf(card);
     render(card,durationOf(card),durationOf(card));
     return p;
   }
-
   function render(card,left,total){
-    const p=card?.querySelector('.meu-rest-panel')||ensurePanel(card);
-    if(!p)return;
+    const p=card?.querySelector('.meu-rest-panel')||ensurePanel(card);if(!p)return;
     const s=Math.max(0,Math.ceil(left));
     p.querySelector('.meu-rest-big').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
     const ring=p.querySelector('.meu-rest-ring');
     const deg=Math.max(0,Math.min(360,(1-left/Math.max(1,total))*360));
     ring.style.background=`conic-gradient(#ef6500 ${deg}deg,rgba(255,255,255,.13) ${deg}deg 360deg)`;
   }
-
   function showFinished(name){
     let t=document.getElementById('meu-treino-rest-toast');
     if(!t){t=document.createElement('div');t.id='meu-treino-rest-toast';t.style.cssText='position:fixed;right:20px;bottom:20px;z-index:99999;background:rgba(24,32,48,.96);color:#fff;padding:11px 15px;border-radius:11px;font:800 13px/1.3 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18);opacity:0;transform:translateY(6px);transition:.2s;pointer-events:none';document.body.appendChild(t)}
@@ -104,59 +87,24 @@
     clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(6px)'},2200);
     try{navigator.vibrate?.(160)}catch(e){}
   }
-
   function stop(card){const old=active.get(card);if(old){clearInterval(old.interval);active.delete(card)}}
   function start(card){
-    if(!card)return false;
-    injectStyle();hideLegacy(card);ensurePanel(card);stop(card);
+    if(!card)return false;injectStyle();hideLegacy(card);ensurePanel(card);stop(card);
     const total=Math.max(1,durationOf(card)),name=nameOf(card),started=Date.now();
     active.set(card,{total,interval:null});render(card,total,total);
-    const tick=()=>{
-      const left=Math.max(0,total-(Date.now()-started)/1000);render(card,left,total);
-      if(left<=0){
-        stop(card);render(card,0,total);showFinished(name);
-        setTimeout(()=>{const p=card.querySelector('.meu-rest-panel');if(p)render(card,total,total)},1800);
-      }
-    };
-    tick();
-    active.get(card).interval=setInterval(tick,250);
-    return true;
+    const tick=()=>{const left=Math.max(0,total-(Date.now()-started)/1000);render(card,left,total);if(left<=0){stop(card);render(card,0,total);showFinished(name);setTimeout(()=>{const p=card.querySelector('.meu-rest-panel');if(p)render(card,total,total)},1800)}};
+    tick();active.get(card).interval=setInterval(tick,250);return true;
   }
-
   function schedule(input){
-    if(!isRepsInput(input))return;
-    const value=Number(String(input.value??'').replace(',','.'));
-    if(!(value>0))return;
-    const card=findCard(input);if(!card)return;
+    if(!isRepsInput(input))return;const value=Number(String(input.value??'').replace(',','.'));if(!(value>0))return;const card=findCard(input);if(!card)return;
     clearTimeout(input.__meuRestDebounce);input.__meuRestDebounce=setTimeout(()=>start(card),120);
   }
-
-  function prepareCards(){
-    injectStyle();
-    document.querySelectorAll('.exercise').forEach(card=>{
-      if(/DESCANSO\s*\d+\s*:\s*\d{2}/i.test(clean(card.textContent))){
-        hideLegacy(card);
-        ensurePanel(card);
-      }
-    });
-  }
-
+  function prepareCards(){injectStyle();document.querySelectorAll('.exercise').forEach(card=>{if(/DESCANSO\s*\d+\s*:\s*\d{2}/i.test(clean(card.textContent))){hideLegacy(card);ensurePanel(card)}})}
   document.addEventListener('input',e=>schedule(e.target),true);
   document.addEventListener('change',e=>schedule(e.target),true);
   document.addEventListener('blur',e=>schedule(e.target),true);
-
-  window.autoRest=function(index){
-    try{
-      const unique=[...new Set([...document.querySelectorAll('input')].map(findCard).filter(Boolean))];
-      const n=Number(index);
-      const card=Number.isInteger(n)?unique[n]:findCard(document.activeElement);
-      return card?start(card):false;
-    }catch(e){console.warn('autoRest',e);return false}
-  };
+  window.autoRest=function(index){try{const unique=[...new Set([...document.querySelectorAll('input')].map(findCard).filter(Boolean))];const n=Number(index);const card=Number.isInteger(n)?unique[n]:findCard(document.activeElement);return card?start(card):false}catch(e){console.warn('autoRest',e);return false}};
   window.MeuTreinoRestTimer={start,stop,active:()=>[...document.querySelectorAll('.meu-rest-panel')].length};
-
-  injectStyle();
-  prepareCards();
-  const mo=new MutationObserver(()=>prepareCards());
-  mo.observe(document.body,{childList:true,subtree:true});
+  injectStyle();prepareCards();
+  const mo=new MutationObserver(()=>prepareCards());mo.observe(document.body,{childList:true,subtree:true});
 })();
