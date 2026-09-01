@@ -1,4 +1,4 @@
-/* MEU TREINO — RECOVERY CLEAN 2026-08-28 */
+/* MEU TREINO — compatibility fix */
 (function(){
 'use strict';
 function escX(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -11,8 +11,7 @@ window.queueSave=function(){return Promise.resolve(false)};
 window.save=function(){localOnly();return Promise.resolve(false)};
 window.cloudSave=async function(k){const l=data?.logs?.[k];if(!user||!sb||!l||l.draft===true||l.completed!==true)return false;try{const {error}=await sb.from('workout_logs').upsert({user_id:user.id,log_key:CLOUD_PREFIX+k,day:l.day,workout_date:l.date,payload:l,updated_at:new Date().toISOString()},{onConflict:'user_id,log_key'});if(error)throw error;cloudReady=true;setStatus('☁ Online • treino salvo',true);return true}catch(e){console.error('cloudSave',e);cloudReady=false;setStatus('⚠ Não confirmado na nuvem',false);return false}};
 window.saveWorkout=async function(k){const l=data?.logs?.[k];if(!l)return false;if(l.timerStartedAt&&typeof stopGeneralTimer==='function')stopGeneralTimer();const snapshot=JSON.parse(JSON.stringify(l));snapshot.draft=false;snapshot.completed=true;snapshot.completedAt=new Date().toISOString();const normal=(snapshot.day||current)+'|'+(snapshot.date||todayX());data.logs[normal]=snapshot;if(k!==normal)delete data.logs[k];localOnly();const ok=user&&sb?await cloudSave(normal):false;localOnly();render();setTimeout(()=>alert(user&&sb?(ok?'Treino salvo no histórico e no Supabase.':'Treino salvo neste aparelho, mas NÃO foi confirmado no Supabase.'):'Treino salvo neste aparelho. Entre na conta para sincronizar.'),40);return ok};
-function wireSaveButton(){document.querySelectorAll('.actions button').forEach(btn=>{if(/Salvar treino/i.test(btn.textContent||'')){const m=(btn.getAttribute('onclick')||'').match(/save\(['"]([^'"]+)/);const k=m?.[1]||key(current,todayX());btn.onclick=()=>saveWorkout(k)}});purgeSpotify()}
-/* Programa oficial: quarta sem elevação pélvica; segunda exercício 5 = supino inclinado máquina. */
+function wireSaveButton(){document.querySelectorAll('.actions button').forEach(btn=>{if(/Salvar treino/i.test(btn.textContent||'')){const m=(btn.getAttribute('onclick')||'').match(/save\(['"]([^'"]+)/);const k=m?.[1]||current+'|'+todayX();btn.onclick=()=>saveWorkout(k)}});purgeSpotify()}
 try{workouts.Quarta.ex=workouts.Quarta.ex.filter(e=>String(e?.[0]).toLowerCase()!=='elevação pélvica')}catch(e){}
 try{workouts.Segunda.ex[4]=['Supino inclinado máquina',4,'8–10']}catch(e){}
 window.setVal=function(k,i,s,f,v){const l=ensureDraft(current,todayX());l.rows[i]??={};l.rows[i][f+s]=v;localOnly();if(f==='kg'&&Number(v)>0&&!l.timerStartedAt&&typeof startGeneralTimer==='function')setTimeout(()=>startGeneralTimer(k,l),30);if(f==='reps'&&String(v??'').trim()!==''&&Number(v)>0&&typeof autoRest==='function')setTimeout(()=>autoRest(i),40)};
