@@ -7,6 +7,6 @@
     code=code.replace("'Crucifixo inverso':60","'Crucifixo inverso':60,'Crucifixo inverso na polia':75,'Panturrilha no leg horizontal':75");
     (0,eval)(code);
     const scripts=['final-clean-fix.js','coach-live.js','coach-openai.js','session-state-fix.js','history-edit-modal.js','rest-timer-fix.js','exercise-images-fix.js','save-handler-v7.js','extra-exercises-v9.js','navigation-fix-v10.js'];
-    for(const name of scripts){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=name+'?v=20260901navv10';s.onload=resolve;s.onerror=reject;document.body.appendChild(s)})}
-  }catch(e){console.error('[app-bootstrap-v10]',e);document.body.innerHTML='<div style="padding:30px;font-family:system-ui">Não foi possível carregar o MEU TREINO. Recarregue a página.</div>'}
+    for(const name of scripts){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=name+'?v=20260901navv11';s.onload=resolve;s.onerror=reject;document.body.appendChild(s)})}
+  }catch(e){console.error('[app-bootstrap-v11]',e);document.body.innerHTML='<div style="padding:30px;font-family:system-ui">Não foi possível carregar o MEU TREINO. Recarregue a página.</div>'}
 })();
