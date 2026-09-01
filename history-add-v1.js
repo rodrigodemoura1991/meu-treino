@@ -2,7 +2,7 @@
 'use strict';
 const DAY_ORDER=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 const isoDate=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const todayIso=()=>isoDate(new Date());
+const offsetIso=n=>{const d=new Date();d.setDate(d.getDate()+n);return isoDate(d)};
 const weekdayFor=iso=>DAY_ORDER[new Date(iso+'T12:00:00').getDay()];
 function addButton(){
  if(current!=='Histórico')return;
@@ -19,7 +19,7 @@ function modal(){
  document.body.appendChild(m);const sel=m.querySelector('#histDay');days.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d+' — '+workouts[d].title;sel.appendChild(o)});
  m.querySelector('#histDate').addEventListener('change',()=>sel.value=weekdayFor(m.querySelector('#histDate').value));m.querySelector('#histCancel').onclick=()=>m.style.display='none';m.querySelector('#histStart').onclick=startHistorical;return m;
 }
-function openModal(){const m=modal();m.querySelector('#histDate').value=todayIso();m.querySelector('#histDay').value=weekdayFor(todayIso());m.style.display='flex'}
+function openModal(){const m=modal(),date=offsetIso(-1);m.querySelector('#histDate').value=date;m.querySelector('#histDay').value=weekdayFor(date);m.style.display='flex'}
 function startHistorical(){const m=document.getElementById('historicalWorkoutModal'),date=m.querySelector('#histDate').value,day=m.querySelector('#histDay').value;if(!date)return alert('Escolha a data do treino.');const k=key(day,date);if(data.logs[k]&&!confirm('Já existe um treino salvo nessa data. Deseja abrir esse registro para editar?'))return;editDate=date;current=day;drafts[k]=data.logs[k]?clone(data.logs[k]):blankLog(day,date);m.style.display='none';render();window.scrollTo({top:0,behavior:'smooth'})}
 new MutationObserver(addButton).observe(document.body,{childList:true,subtree:true});setTimeout(addButton,300);
 })();
