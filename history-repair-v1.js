@@ -53,7 +53,7 @@ function rebuildHistory(){
    html+='<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">';
    html+='<div><strong style="font-size:15px">'+day+' — '+escH(new Date(l.date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'}))+'</strong><div class="muted" style="margin-top:4px">'+title+'</div></div>';
    html+='<div style="display:flex;gap:6px"><button class="secondary" onclick="editLog('+safeK+')">✏️ Editar</button><button class="danger" onclick="deleteLog('+safeK+')">Excluir</button></div>';
-   html+='</div><div style="margin-top:9px">'+metrics(l)+'</div></article>';
+   html+='</div><div style="margin-top:9px">'+metrics(l)+'</div>'; const exhtml=exerciseHistoryHtml(l); if(exhtml) html+='<details class="history-exercises" open style="margin-top:10px"><summary style="cursor:pointer;font-weight:800;color:#44515f">🏋️ Exercícios realizados</summary><div style="margin-top:7px">'+exhtml+'</div></details>'; html+='</article>';
  }
  html+='</div></section>';
  app.innerHTML=html;
