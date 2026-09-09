@@ -12,6 +12,27 @@ const workouts={
  Sábado:{icon:'🟣',title:'Opcional • Pontos fracos',ex:[['Elevação lateral',3,'10–15'],['Crucifixo inverso',3,'10–15'],['Rosca martelo',3,'8–12'],['Tríceps corda',3,'10–12'],['Panturrilha sentado',3,'10–15'],['Panturrilha em pé ou no leg press',3,'10–15']]},
  Domingo:{icon:'⚪',title:'Recuperação / Cardio',ex:[]}
 };
+
+// Estrutura histórica: mantém os exercícios corretos dos registros antigos mesmo após mudanças no treino oficial.
+const LEGACY_WORKOUTS={
+ Segunda:{title:'Pernas + Peito',ex:[['Abdominal máquina',3,'12–15'],['Pêndulo',4,'6–10'],['Cadeira extensora',3,'10–15'],['Stiff com barra ou halteres',3,'8–10'],['Supino inclinado com halteres',4,'8–10'],['Supino reto máquina',3,'8–12'],['Crucifixo máquina',2,'12–15']]},
+ Terça:{title:'Costas + Bíceps',ex:[['Barra fixa ou puxada neutra',4,'6–10'],['Remada articulada com apoio no peito',4,'8–12'],['Remada unilateral na polia',3,'10–12'],['PULLDOWN',3,'10–15'],['Rosca direta com barra W',3,'8–12'],['Rosca inclinada com halteres',3,'10–12'],['Rosca martelo com halteres',2,'10–12']]},
+ Quarta:{title:'Pernas + Ombros',ex:[['Abdominal no Cross',3,'12–15'],['Leg press 45°',4,'8–12'],['Cadeira flexora bilateral',4,'8–12'],['Mesa flexora',3,'10–15'],['Desenvolvimento máquina',3,'8–10'],['Elevação lateral na polia',4,'10–15'],['Crucifixo inverso máquina',3,'12–15'],['Panturrilha em pé ou no leg press',4,'10–15']]},
+ Quinta:{title:'Peito + Tríceps',ex:[['Supino reto com barra',4,'6–10'],['Supino inclinado máquina',3,'8–12'],['Supino reto máquina',3,'8–12'],['Crossover de baixo para cima',2,'12–15'],['Tríceps francês unilateral na polia',3,'10–12'],['Tríceps barra V',3,'8–12'],['Tríceps testa com barra W',2,'10–12']]},
+ Sexta:{title:'Full Body + Pontos fracos',ex:[['Abdominal máquina',3,'12–15'],['Agachamento Hack',3,'8–12'],['Flexora unilateral',3,'10–12'],['Remada baixa triângulo',3,'8–12'],['Puxada alta pronada',3,'8–12'],['Elevação lateral',3,'12–15'],['Rosca Scott máquina',2,'10–12'],['Tríceps corda',2,'10–15']]},
+ Sábado:{title:'Opcional • Pontos fracos',ex:[['Elevação lateral',3,'12–15'],['Crucifixo inverso',3,'12–15'],['Rosca martelo',3,'10–12'],['Tríceps corda',3,'10–12'],['Panturrilha sentado',4,'12–15']]}
+};
+function exerciseSpecsForLog(l){
+ if(!l)return [];
+ if(Array.isArray(l.exerciseNames)&&l.exerciseNames.length){
+  return l.exerciseNames.map(name=>Object.values(workouts).flatMap(w=>w.ex||[]).find(e=>e[0]===name)||[name,3,'8–12']);
+ }
+ const d=new Date(String(l.date||'')+'T12:00:00');
+ if(d.getTime() && d.getTime()<new Date('2026-09-09T00:00:00').getTime()) return LEGACY_WORKOUTS[l.day]?.ex||workouts[l.day]?.ex||[];
+ return workouts[l.day]?.ex||[];
+}
+window.exerciseSpecsForLog=exerciseSpecsForLog;
+
 const cardioTypes=['Bicicleta','Esteira / caminhada','Corrida','Elíptico','Outro'];
 const restPreset={'Abdominal máquina':60,'Abdominal no Cross':60,'Pêndulo':120,'Cadeira extensora':75,'Stiff com barra ou halteres':120,'Supino inclinado com halteres':120,'Supino reto máquina':90,'Crucifixo máquina':75,'Barra fixa ou puxada neutra':120,'Remada articulada com apoio no peito':120,'Remada unilateral na polia':90,'PULLDOWN':90,'Rosca direta com barra W':75,'Rosca inclinada com halteres':75,'Rosca martelo com halteres':75,'Leg press 45°':120,'Cadeira flexora bilateral':90,'Mesa flexora':90,'Desenvolvimento máquina':90,'Elevação lateral na polia':60,'Crucifixo inverso máquina':60,'Panturrilha em pé ou no leg press':75,'Supino reto com barra':150,'Supino inclinado máquina':120,'Crossover de baixo para cima':75,'Tríceps francês unilateral na polia':75,'Tríceps barra V':75,'Tríceps testa com barra W':75,'Hack squat':120,'Agachamento Hack':120,'Flexora unilateral':90,'Remada baixa triângulo':120,'Puxada alta pronada':90,'Elevação lateral':60,'Rosca Scott máquina':75,'Tríceps corda':75,'Panturrilha':75,'Panturrilha sentado':75,'Crucifixo inverso':60,'Rosca martelo':75};
 
@@ -72,11 +93,11 @@ async function signIn(){if(authBusy)return;const email=$('email')?.value.trim(),
 async function signUp(){const email=$('email')?.value.trim(),password=$('password')?.value||'';if(!email||password.length<6){alert('Informe um e-mail e uma senha com pelo menos 6 caracteres.');return}if(!sb){alert('A conexão ainda não carregou.');return}const {error}=await sb.auth.signUp({email,password});alert(error?error.message:'Conta criada. Confirme o e-mail se solicitado e faça login.')}
 async function signOut(){try{await sb?.auth.signOut()}catch(e){}user=null;cloudReady=false;drafts={};editDate=null;current='Segunda';render();setStatus('☁ Pronto para entrar')}
 function validSavedLog(l){return !!(l?.date&&l?.completed!==false&&Object.values(l.rows||{}).some(r=>Object.keys(r||{}).some(k=>/^kg\d+$/.test(k)&&Number(r[k])>0)&&Object.keys(r||{}).some(k=>/^reps\d+$/.test(k)&&Number(r[k])>0)))}
-function cleanLocalData(){const flag='meu_treino_legacy_cleanup_v4';try{if(localStorage.getItem(flag)==='1')return}catch(e){}let changed=false;Object.keys(data.logs||{}).forEach(k=>{const l=data.logs[k];if(!validSavedLog(l)){delete data.logs[k];changed=true}});if(changed)persist();try{localStorage.setItem(flag,'1')}catch(e){}}
+function cleanLocalData(){/* preservação: não apagar registros automaticamente */try{localStorage.setItem('meu_treino_legacy_cleanup_v4','1')}catch(e){}}
 async function loadCloud(){if(!user||user.offline||!sb)return;try{const {data:rows,error}=await sb.from('workout_logs').select('log_key,payload').like('log_key',CLOUD_PREFIX+'%').order('workout_date',{ascending:false});if(error)throw error;cloudReady=true;for(const r of rows||[]){const k=r.log_key.replace(CLOUD_PREFIX,'');if(validSavedLog(r.payload))data.logs[k]=r.payload}cleanLocalData();persist();render();setStatus('☁ Online • salvo',true)}catch(e){console.error('cloud load',e);cloudReady=false;setStatus('⚠ Nuvem indisponível • local salvo')}}
 function queueSave(k){clearTimeout(saveTimer);saveTimer=setTimeout(()=>cloudSave(k),250)}
 async function cloudSave(k){if(!user||user.offline||!sb||!data.logs[k])return;try{const l=data.logs[k];const {error}=await sb.from('workout_logs').upsert({user_id:user.id,log_key:CLOUD_PREFIX+k,day:l.day,workout_date:l.date,payload:l,updated_at:new Date().toISOString()},{onConflict:'user_id,log_key'});if(error)throw error;cloudReady=true;setStatus('☁ Online • salvo',true)}catch(e){console.error('cloud save',e);cloudReady=false;setStatus('⚠ Salvo neste aparelho')}}
-function commitSaved(k){const d=drafts[k];if(!d)return false;if(!validDraft(d)){alert('Preencha pelo menos uma série com carga e repetições antes de salvar.');return false}stopGeneralTimer(false);d.completed=true;d.timerStartedAt=null;d.timerElapsed=elapsedFrom(d);d.duration=d.timerElapsed?fmtDuration(d.timerElapsed):d.duration||'';d.tonnageKg=volumeForLog(d);d.tonnes=d.tonnageKg/1000;data.logs[k]=clone(d);delete drafts[k];editDate=null;persist();queueSave(k);render();return true}
+function commitSaved(k){const d=drafts[k];if(!d)return false;if(!validDraft(d)){alert('Preencha pelo menos uma série com carga e repetições antes de salvar.');return false}stopGeneralTimer(false);d.completed=true;d.timerStartedAt=null;d.timerElapsed=elapsedFrom(d);d.duration=d.timerElapsed?fmtDuration(d.timerElapsed):d.duration||'';d.tonnageKg=volumeForLog(d);d.tonnes=d.tonnageKg/1000;d.exerciseNames=exFor(current).map(e=>e[0]);data.logs[k]=clone(d);delete drafts[k];editDate=null;persist();queueSave(k);render();return true}
 function validDraft(l){return !!Object.values(l?.rows||{}).some(r=>{for(let s=0;s<20;s++)if(Number(r?.['kg'+s])>0&&Number(r?.['reps'+s])>0)return true;return false})}
 function autoStartRep(k){const l=drafts[k]||ensureDraft(current,activeDate());startGeneralTimer(k,l)}
 function setVal(k,i,s,f,v){const l=drafts[k]||ensureDraft(current,activeDate());l.rows[i]??={};l.rows[i][f+s]=v;localSave();if(f==='reps'&&String(v??'').trim()&&Number(v)>0)startGeneralTimer(k,l);updateWorkoutSummary();refreshExerciseCoach(i)}
