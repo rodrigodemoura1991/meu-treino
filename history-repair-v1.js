@@ -10,7 +10,18 @@ const hasSeries=l=>Object.values(l?.rows||{}).some(r=>{
 });
 const valid=l=>!!(l?.date && l?.completed!==false && hasSeries(l));
 const escH=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function exerciseCount(l){return Object.values(l?.rows||{}).filter(hasSeries).length+(Array.isArray(l?.extraExercises)?l.extraExercises.length:0)}
+function exerciseCount(l){return Object.entries(l?.rows||{}).filter(([k,r])=>/^\d+$/.test(String(k))&&hasSeries(r)).length+(Array.isArray(l?.extraExercises)?l.extraExercises.length:0)}
+function exerciseHistoryHtml(l){
+ const specs=typeof window.exerciseSpecsForLog==='function'?window.exerciseSpecsForLog(l):((workouts[l.day]?.ex)||[]);
+ const rows=l?.rows||{};
+ const items=[];
+ specs.forEach((e,i)=>{
+   const r=rows[i]; if(!hasSeries(r)) return;
+   const sets=[]; for(let s=0;s<20;s++){const kg=Number(r?.['kg'+s]),reps=Number(r?.['reps'+s]);if(kg>0&&reps>0)sets.push(kg+' kg × '+reps)}
+   if(sets.length) items.push('<div style="padding:6px 0;border-top:1px solid #edf0f3"><b>'+escH(e[0])+'</b><div class="muted" style="font-size:11px;margin-top:2px">'+sets.join(' · ')+'</div></div>');
+ });
+ return items.join('');
+}
 function metrics(l){
  const out=[];
  out.push('🏋️ '+exerciseCount(l)+' exercícios');
