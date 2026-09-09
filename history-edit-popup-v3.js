@@ -4,7 +4,7 @@ function getKey(el){
   const row=el.closest?.('.historyrow')||el.parentElement?.closest?.('.historyrow');
   const nodes=[el,...(row?[...row.querySelectorAll('button,a,[role="button"]')]:[])];
   for(const n of nodes){
-    const vals=[n.getAttribute?.('onclick')||'',n.dataset?.key||'',n.dataset?.logKey||'',n.getAttribute?.('data-key')||'',n.getAttribute?.('data-log-key')||''];
+    const vals=[n.getAttribute?.('onclick')||'',n.dataset?.key||'',n.dataset?.logKey||'',n.getAttribute?.('data-key')||'',n.getAttribute?.('data-log-key')||'',row?.getAttribute?.('data-log-key')||''];
     for(const v of vals){
       const m=String(v).match(/(?:editLog|deleteLog|editHistoryModal|commitSaved)\(\s*['\"]([^'\"]+)['\"]\s*\)/);
       if(m)return m[1];
