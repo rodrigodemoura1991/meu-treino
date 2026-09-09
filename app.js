@@ -105,7 +105,22 @@ function setObs(k,i,v){const l=drafts[k]||ensureDraft(current,activeDate());l.ro
 function setMetric(k,f,v){const l=drafts[k]||ensureDraft(current,activeDate());l[f]=v;updateWorkoutSummary()}
 function setCardio(k,f,v){const l=drafts[k]||ensureDraft(current,activeDate());l.cardio??={};l.cardio[f]=v}
 function setNotes(k,v){const l=drafts[k]||ensureDraft(current,activeDate());l.notes=v}
-async function deleteLog(k){if(!data.logs[k]){delete drafts[k];render();return}if(!confirm('Excluir este registro de treino? Esta ação não pode ser desfeita.'))return;delete data.logs[k];delete drafts[k];persist();if(user&&!user.offline&&sb){try{await sb.from('workout_logs').delete().eq('user_id',user.id).eq('log_key',CLOUD_PREFIX+k)}catch(e){console.error(e)}}render()}
+async function deleteLog(k){
+ const oldLog=data.logs[k];
+ if(!oldLog){delete drafts[k];render();return}
+ if(!confirm('Excluir este registro de treino? Esta ação não pode ser desfeita.'))return;
+ try{
+   if(user&&!user.offline&&sb){
+     const {error}=await sb.from('workout_logs').delete().eq('user_id',user.id).eq('log_key',CLOUD_PREFIX+k);
+     if(error)throw error;
+   }
+   delete data.logs[k]; delete drafts[k]; persist(); render(); setStatus(user&&!user.offline?'☁ Online • salvo':'☁ Offline/local',!!(user&&!user.offline&&sb));
+ }catch(e){
+   console.error('delete workout',e);
+   data.logs[k]=oldLog; persist(); render();
+   alert('Não foi possível excluir este treino da nuvem. Seus dados foram mantidos. Tente novamente.');
+ }
+}
 function clearDay(){const k=key(current,activeDate());if(drafts[k]){delete drafts[k];stopGeneralTimer();render();return}if(data.logs[k])deleteLog(k);else render()}
 function editLog(k){if(!data.logs[k])return;drafts[k]=clone(data.logs[k]);current=data.logs[k].day;editDate=data.logs[k].date;render()}
 function dayNav(){return '<div class="daystrip">'+days.map(d=>'<button class="'+(current===d?'active':'')+'" onclick="go(\''+d+'\')">'+workouts[d].icon+'<small>'+d.slice(0,3).toUpperCase()+'</small></button>').join('')+'</div>'}
