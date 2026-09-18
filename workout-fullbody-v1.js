@@ -22,4 +22,13 @@
   if(start<0||end<0) throw new Error('Estrutura da ficha não encontrada em app.js');
   code=code.slice(0,start)+workouts+code.slice(end);
   (0,eval)(code);
+  // app-fix-v12.js ainda faz pequenos ajustes históricos. Reaplica a ficha final
+  // depois desses patches para garantir que a quarta continue sem pernas e o sábado fique livre.
+  setTimeout(function(){
+    try{
+      workouts.Quarta={icon:'🟠',title:'Full Body C • Superior • Sem pernas',ex:[['Abdominal máquina',3,'10–15'],['Supino inclinado máquina',3,'8–12'],['PULLDOWN',3,'8–12'],['Remada unilateral na polia',3,'8–12'],['Elevação lateral na polia',3,'12–15'],['Rosca inclinada com halteres',2,'10–15'],['Tríceps francês unilateral na polia',2,'10–15']]};
+      workouts.Sábado={icon:'⚪',title:'Recuperação • Sem treino programado',ex:[]};
+      if(typeof render==='function' && typeof current!=='undefined') render();
+    }catch(e){console.error('final workout reset',e)}
+  },0);
 })();
