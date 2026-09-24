@@ -54,17 +54,27 @@ function ensureDraft(day=current,date=activeDate()){const k=key(day,date);if(!dr
 function activeLog(day=current,date=activeDate()){return drafts[key(day,date)]||data.logs[key(day,date)]||null}
 function exFor(day){return workouts[day]?.ex||[]}
 function initClient(){try{sb=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);return !!sb}catch(e){console.error(e);return false}}
-function loadSupabaseScript(){return new Promise(resolve=>{
+function loadSupabaseScript(){return new Promise(async resolve=>{
   if(window.supabase?.createClient){resolve(true);return}
-  const script=document.createElement('script');
-  script.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js';
-  script.crossOrigin='anonymous';
-  let done=false;
-  const finish=ok=>{if(done)return;done=true;clearTimeout(timer);script.onload=null;script.onerror=null;resolve(ok)};
-  const timer=setTimeout(()=>finish(false),1800);
-  script.onload=()=>finish(!!window.supabase?.createClient);
-  script.onerror=()=>finish(false);
-  document.head.appendChild(script);
+  const urls=[
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js',
+    'https://unpkg.com/@supabase/supabase-js@2.110.0/dist/umd/supabase.js'
+  ];
+  for(const src of urls){
+    const ok=await new Promise(done=>{
+      const script=document.createElement('script');
+      script.src=src;
+      script.crossOrigin='anonymous';
+      let settled=false;
+      const finish=value=>{if(settled)return;settled=true;clearTimeout(timer);script.onload=null;script.onerror=null;done(value)};
+      const timer=setTimeout(()=>finish(false),8000);
+      script.onload=()=>finish(!!window.supabase?.createClient);
+      script.onerror=()=>finish(false);
+      document.head.appendChild(script);
+    });
+    if(ok){resolve(true);return}
+  }
+  resolve(false);
 })}
 function enterOfflineMode(reason='☁ Offline • salvo neste aparelho'){
   user={id:'offline-local',offline:true};cloudReady=false;setStatus(reason);render();
@@ -76,16 +86,16 @@ async function init(){
   if(!navigator.onLine){enterOfflineMode();return}
   setStatus('☁ Preparando...',true);
   const loaded=await loadSupabaseScript();
-  if(!loaded||!initClient()){enterOfflineMode();return}
+  if(!loaded||!initClient()){enterOfflineMode('⚠ Nuvem indisponível • salvo neste aparelho');return}
   setStatus('☁ Verificando...',true);
   let sessionResult=null;
   try{
     sessionResult=await Promise.race([
       sb.auth.getSession(),
-      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Supabase session timeout')),2200))
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Supabase session timeout')),6000))
     ]);
     user=sessionResult?.data?.session?.user||null;
-  }catch(e){console.warn('Sessão Supabase não respondeu a tempo:',e);enterOfflineMode();return}
+  }catch(e){console.warn('Sessão Supabase não respondeu a tempo:',e);enterOfflineMode('⚠ Nuvem indisponível • salvo neste aparelho');return}
   render();
   if(user) await loadCloud(); else setStatus('☁ Pronto para entrar');
 }
@@ -218,5 +228,6 @@ function reports(){const mode=window.__reportMode||'week',ls=reportRange(mode),s
 function login(){return '<section class="card auth"><div class="authicon">🏋️</div><h1>Meu Treino</h1><p>Seu diário de musculação, cargas, repetições e progressão.</p><label>E-MAIL<input id="email" type="email" autocomplete="email" placeholder="seu@email.com"></label><label>SENHA<input id="password" type="password" autocomplete="current-password" placeholder="Sua senha"></label><button id="loginBtn" class="loginbtn" onclick="signIn()">ENTRAR</button><button class="secondary wide" onclick="signUp()">CRIAR CONTA</button></section>'}
 function render(){const app=$('app');if(!app)return;if(!user){app.innerHTML=login();return}stopRestIntervals();const html=days.includes(current)?workout():current==='Histórico'?history():current==='Relatórios'?reports():dataPage();app.innerHTML=html+bottomNav();loadFilled();if(days.includes(current)){const k=key(current,activeDate());updateTimerDisplay(k);if(drafts[k]?.timerStartedAt)startGeneralTimer(k,drafts[k])}}
 function stopRestIntervals(){Object.keys(restIntervals).forEach(i=>{clearInterval(restIntervals[i]);delete restIntervals[i]});Object.keys(restDebounce).forEach(i=>{clearTimeout(restDebounce[i]);delete restDebounce[i]})}
+window.addEventListener('online',()=>{if(user?.offline)window.setTimeout(()=>window.location.reload(),300)});
 window.addEventListener('keydown',enterHandler,true);window.addEventListener('beforeunload',()=>{stopRestIntervals();if(generalTimer)clearInterval(generalTimer)});window.setVal=setVal;window.autoStartRep=autoStartRep;window.fieldInput=fieldInput;window.advanceField=advanceField;window.go=go;window.commitSaved=commitSaved;window.clearDay=clearDay;window.deleteLog=deleteLog;window.editLog=editLog;window.toggleRest=toggleRest;window.queueRestFromInput=queueRestFromInput;window.startGeneralTimer=startGeneralTimer;window.stopGeneralTimer=stopGeneralTimer;window.resetGeneralTimer=resetGeneralTimer;window.setReportMode=setReportMode;window.setReportExercise=setReportExercise;window.exportData=exportData;window.importData=importData;window.signIn=signIn;window.signUp=signUp;window.signOut=signOut;window.cleanLocalData=cleanLocalData;
 (async()=>{await init()})();
