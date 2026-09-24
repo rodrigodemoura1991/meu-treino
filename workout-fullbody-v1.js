@@ -8,7 +8,7 @@
     window.EXERCISE_GUIDES['Panturrilha em pé']=window.EXERCISE_GUIDES['Panturrilha em pé ou no leg press'];
   }
   var xhr=new XMLHttpRequest();
-  xhr.open('GET','app.js?v=20260918v01',false);
+  xhr.open('GET','app.js?v=20260924v01',false);
   xhr.send(null);
   if(xhr.status<200||xhr.status>=300) throw new Error('Não foi possível carregar app.js');
   var code=xhr.responseText;
